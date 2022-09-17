@@ -1,9 +1,10 @@
 plugins {
-    id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
+    id "com.google.devtools.ksp" version "1.7.10-1.0.6"
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+dependencies {
+    implementation "com.google.devtools.ksp:symbol-processing-api:1.7.10-1.0.6"
+
+    testImplementation 'junit:junit:4.13.2'
 }

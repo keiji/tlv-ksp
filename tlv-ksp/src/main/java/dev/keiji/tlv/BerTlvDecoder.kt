@@ -126,7 +126,11 @@ class BerTlvDecoder {
                     throw InvalidObjectException("Long Definite length must not be grater 126 bytes.")
                 }
                 val length = ByteArray(fieldLength)
-                inputStream.read(length)
+                val readLen = inputStream.read(length)
+                if (readLen != fieldLength) {
+                    throw StreamCorruptedException()
+                }
+
                 return BigInteger(+1, length)
             }
         }

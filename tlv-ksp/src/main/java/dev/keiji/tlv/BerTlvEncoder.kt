@@ -25,7 +25,7 @@ class BerTlvEncoder {
             content ?: return
 
             os.write(tag)
-            os.write(content.size)
+            os.write(convertToLength(content.size))
             os.write(content)
         }
 
@@ -37,7 +37,7 @@ class BerTlvEncoder {
             return convertToLength(BigInteger.valueOf(size.toLong()))
         }
 
-        internal fun convertToLength(size: BigInteger): ByteArray {
+        private fun convertToLength(size: BigInteger): ByteArray {
             if (size.compareTo(BigInteger.ZERO) == -1) {
                 throw IllegalArgumentException("size must not be less than 0.")
             }

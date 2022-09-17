@@ -43,7 +43,8 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
 }
 
 internal fun getTagAsString(prop: KSPropertyDeclaration): String {
-    val arrayString = getTagAsByteArray(prop).toHex(", ")
+    val arrayString = getTagAsByteArray(prop)
+        .joinToString(", ") { "0x${it.toHex()}.toByte()" }
     return "byteArrayOf($arrayString)"
 }
 

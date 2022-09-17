@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2022 ARIYAMA Keiji
  *
@@ -49,31 +48,14 @@ class BerTlvDecoder {
             inputStream: InputStream,
             callback: Callback,
         ) {
-            var tag: ByteArray? = null
-            var length: BigInteger? = null
-
             while (true) {
-                if (tag == null) {
-                    tag = readTag(inputStream)
-                    if (tag == null) {
-                        break
-                    }
-                    continue
-                } else if (length == null) {
-                    length = readLength(inputStream)
-                    continue
-                } else {
-                    dispatchOnItemDetected(tag, length, inputStream, callback)
-                }
-                tag = null
-                length = null
-            }
-        }
+                val tag = readTag(inputStream)
+                tag ?: break
 
-        private fun isPrimitiveTag(tag: ByteArray): Boolean {
-            val firstByte = tag[0].toInt() and 0xFF
-            val pcBit = (firstByte and MASK_PC_BITS) ushr 5
-            return pcBit == PC_PRIMITIVE
+                val length = readLength(inputStream)
+
+                dispatchOnItemDetected(tag, length, inputStream, callback)
+            }
         }
 
         private fun dispatchOnItemDetected(
@@ -85,8 +67,12 @@ class BerTlvDecoder {
             val isLargeItem = length.bitLength() > (Integer.SIZE - 1)
 
             if (!isLargeItem) {
-                val data = ByteArray(length.toInt())
-                inputStream.read(data)
+                val len = length.toInt()
+                val data = ByteArray(len)
+                val readLen = inputStream.read(data)
+                if (readLen != len) {
+                    throw StreamCorruptedException()
+                }
                 callback.onItemDetected(tag, data)
             } else {
                 callback.onLargeItemDetected(tag, length, inputStream)

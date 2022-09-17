@@ -54,28 +54,33 @@ class BerTlvDecoder {
 
                 val length = readLength(inputStream)
 
-                dispatchOnItemDetected(tag, length, inputStream, callback)
+                val isLargeItem = length.bitLength() > (Integer.SIZE - 1)
+                if (!isLargeItem) {
+                    val data = readData(inputStream, length)
+                    callback.onItemDetected(tag, data)
+                } else {
+                    callback.onLargeItemDetected(tag, length, inputStream)
+                }
             }
         }
 
-        private fun dispatchOnItemDetected(
-            tag: ByteArray,
-            length: BigInteger,
+        private fun readData(
             inputStream: InputStream,
-            callback: Callback
-        ) {
-            val isLargeItem = length.bitLength() > (Integer.SIZE - 1)
+            length: BigInteger,
+        ): ByteArray {
+            val dataLength = length.toInt()
+            val data = ByteArray(dataLength)
+            var offset = 0
 
-            if (!isLargeItem) {
-                val len = length.toInt()
-                val data = ByteArray(len)
-                val readLen = inputStream.read(data)
-                if (readLen != len) {
+            while (true) {
+                val readLength = inputStream.read(data, offset, (dataLength - offset))
+                if (readLength < 0) {
                     throw StreamCorruptedException()
+                } else if (readLength < (dataLength - offset)) {
+                    offset += readLength
+                } else {
+                    return data
                 }
-                callback.onItemDetected(tag, data)
-            } else {
-                callback.onLargeItemDetected(tag, length, inputStream)
             }
         }
 
@@ -125,13 +130,23 @@ class BerTlvDecoder {
                 if (fieldLength > MAX_LENGTH_FILED_LENGTH) {
                     throw InvalidObjectException("Long Definite length must not be grater 126 bytes.")
                 }
-                val length = ByteArray(fieldLength)
-                val readLen = inputStream.read(length)
-                if (readLen != fieldLength) {
-                    throw StreamCorruptedException()
-                }
 
-                return BigInteger(+1, length)
+                val lengthBytes = ByteArray(fieldLength)
+                var offset = 0
+
+                while (true) {
+                    val readLength = inputStream.read(lengthBytes, offset, (fieldLength - offset))
+                    if (readLength < 0) {
+                        throw StreamCorruptedException()
+                    } else if (readLength < (fieldLength - offset)) {
+                        offset += readLength
+                    } else if (readLength < 0) {
+                        throw StreamCorruptedException()
+                    } else {
+                        break
+                    }
+                }
+                return BigInteger(+1, lengthBytes)
             }
         }
     }

@@ -25,9 +25,9 @@ KSP will generate extend functions `writeTo(OutputStream)` and `readFrom(ByteArr
 
 ```
 fun PrimitiveDatum.writeTo(outputStream: OutputStream) {
-data?.also {
-BerTlvEncoder.writeTo(byteArrayOf(0x01.toByte()), it, outputStream)
-}
+    data?.also {
+        BerTlvEncoder.writeTo(byteArrayOf(0x01.toByte()), it, outputStream)
+    }
 
 }
 ```

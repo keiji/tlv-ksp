@@ -20,6 +20,48 @@ class PrimitiveDatum {
 
 KSP will generate extend functions `writeTo(OutputStream)` and `readFrom(ByteArray)` to `PrimitiveDatum` class.
 
+<details>
+<summary>PrimitiveDatumBerTlvEncoder</summary>
+
+fun PrimitiveDatum.writeTo(outputStream: OutputStream) {
+data?.also {
+BerTlvEncoder.writeTo(byteArrayOf(0x01.toByte()), it, outputStream)
+}
+
+}
+</details>
+
+<details>
+<summary>PrimitiveDatumBerTlvDecoder</summary>
+
+fun PrimitiveDatum.readFrom(data: ByteArray) {
+
+    BerTlvDecoder.readFrom(ByteArrayInputStream(data),
+        object : BerTlvDecoder.Companion.Callback {
+            override fun onLargeItemDetected(
+                tag: ByteArray,
+                length: BigInteger,
+                inputStream: InputStream
+            ) {
+                throw StreamCorruptedException("tag length is too large.")
+            }
+
+            override fun onItemDetected(tag: ByteArray, data: ByteArray) {
+                if (false) {
+                    // Do nothing
+                } else if (byteArrayOf(0x01.toByte()).contentEquals(tag)) {
+                    this@readFrom.data = data
+                } else {
+                    // Do nothing
+                }
+            }
+
+
+        }
+    )
+}
+</details>
+
 License
 ========
 

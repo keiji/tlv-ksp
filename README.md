@@ -23,17 +23,21 @@ KSP will generate extend functions `writeTo(OutputStream)` and `readFrom(ByteArr
 <details>
 <summary>PrimitiveDatumBerTlvEncoder</summary>
 
+```
 fun PrimitiveDatum.writeTo(outputStream: OutputStream) {
 data?.also {
 BerTlvEncoder.writeTo(byteArrayOf(0x01.toByte()), it, outputStream)
 }
 
 }
+```
+
 </details>
 
 <details>
 <summary>PrimitiveDatumBerTlvDecoder</summary>
 
+```
 fun PrimitiveDatum.readFrom(data: ByteArray) {
 
     BerTlvDecoder.readFrom(ByteArrayInputStream(data),
@@ -60,6 +64,7 @@ fun PrimitiveDatum.readFrom(data: ByteArray) {
         }
     )
 }
+```
 </details>
 
 License

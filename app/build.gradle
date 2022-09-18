@@ -5,6 +5,8 @@ plugins {
 }
 
 android {
+    namespace 'dev.keiji.tlv.sample'
+
     compileSdk 32
 
     defaultConfig {

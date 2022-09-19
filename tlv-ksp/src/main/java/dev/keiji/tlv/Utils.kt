@@ -60,10 +60,6 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
 
 internal fun getTagAsString(prop: KSPropertyDeclaration): String {
     val arrayString = getTagAsByteArray(prop)
-        .joinToString(", ") { "0x${it.toHex()}.toByte()" }
+        .joinToString(", ") { "0x${Utils.toHex(it)}.toByte()" }
     return "byteArrayOf($arrayString)"
 }
-
-internal fun ByteArray.toHex(delimiter: String) = this.joinToString(delimiter) { "0x${it.toHex()}" }
-
-internal fun Byte.toHex() = "%02x".format(this).uppercase()

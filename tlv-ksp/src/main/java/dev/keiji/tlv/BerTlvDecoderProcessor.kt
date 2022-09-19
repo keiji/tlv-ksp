@@ -80,7 +80,7 @@ import java.math.BigInteger
 fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
 
     BerTlvDecoder.readFrom(ByteArrayInputStream(data),
-        object : BerTlvDecoder.Companion.Callback {
+        object : BerTlvDecoder.Callback {
             override fun onLargeItemDetected(
                 tag: ByteArray,
                 length: BigInteger,

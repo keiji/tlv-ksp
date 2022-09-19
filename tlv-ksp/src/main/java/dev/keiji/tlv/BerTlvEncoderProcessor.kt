@@ -134,7 +134,7 @@ class BerTlvEncoderProcessor(
                 val className = prop.parent.toString()
                 val propertyName = prop.simpleName.asString()
                 val tagArray = getTagAsByteArray(prop)
-                validateAnnotation(tagArray,className, propertyName)
+                validateAnnotation(tagArray, className, propertyName)
             }
         }
 
@@ -204,3 +204,6 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
         }
     }
 }
+
+fun Byte.toHex() = Utils.toHex(this)
+fun ByteArray.toHex(delimiter: String) = Utils.toHex(this, delimiter)

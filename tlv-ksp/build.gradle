@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation "com.google.devtools.ksp:symbol-processing-api:1.7.10-1.0.6"
+    api project(path: ':tlv')
 
     testImplementation 'junit:junit:4.13.2'
 }

@@ -21,7 +21,11 @@ java {
 }
 
 Properties sonaTypeProps = new Properties()
-sonaTypeProps.load(project.rootProject.file("sonatype.properties").newDataInputStream())
+
+File sonatypePropertiesFile = project.rootProject.file("sonatype.properties")
+if (sonatypePropertiesFile.exists()) {
+    sonaTypeProps.load(sonatypePropertiesFile.newDataInputStream())
+}
 
 
 publishing {

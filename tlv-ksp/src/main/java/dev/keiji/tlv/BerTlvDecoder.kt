@@ -94,21 +94,16 @@ class BerTlvDecoder {
                 }
 
                 val tagBits = (b and MASK_TAG_BITS).toByte()
-
                 val tagSize = tagStream.size()
 
                 if (tagSize == 0) {
                     if (tagBits != MASK_TAG_FULL_BITS) {
                         return byteArrayOf(b.toByte())
-                    } else {
-                        tagStream.write(byteArrayOf(b.toByte()))
-                        continue
                     }
+                    tagStream.write(byteArrayOf(b.toByte()))
                 } else {
                     tagStream.write(byteArrayOf(b.toByte()))
-                    if (b and MASK_MSB_BITS != 0) {
-                        continue
-                    } else {
+                    if (b and MASK_MSB_BITS == 0) {
                         return tagStream.toByteArray()
                     }
                 }

@@ -15,4 +15,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "TlvKsp"
 include ':app'
+include ':tlv'
 include ':tlv-ksp'

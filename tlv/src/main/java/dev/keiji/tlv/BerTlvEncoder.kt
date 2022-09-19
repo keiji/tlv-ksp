@@ -41,16 +41,12 @@ class BerTlvEncoder {
             content ?: return
 
             os.write(tag)
-            os.write(convertToLength(content.size))
+            os.write(convertToLength(content))
             os.write(content)
         }
 
-        fun convertToLength(array: ByteArray): ByteArray {
+        private fun convertToLength(array: ByteArray): ByteArray {
             return convertToLength(BigInteger.valueOf(array.size.toLong()))
-        }
-
-        internal fun convertToLength(size: Int): ByteArray {
-            return convertToLength(BigInteger.valueOf(size.toLong()))
         }
 
         private fun convertToLength(size: BigInteger): ByteArray {

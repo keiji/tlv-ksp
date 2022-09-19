@@ -6,6 +6,12 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.7.10' apply false
 }
 
+ext {
+    groupId = 'dev.keiji.tlv'
+// versionCode = '0.1.0'
+    versionCode = '0.1.0-SNAPSHOT'
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

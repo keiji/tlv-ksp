@@ -43,8 +43,8 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':tlv-ksp')
-    ksp project(path: ':tlv-ksp')
+    implementation('dev.keiji.tlv:tlv-ksp:0.1.0-SNAPSHOT')
+    ksp('dev.keiji.tlv:tlv-ksp:0.1.0-SNAPSHOT')
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.5.1'

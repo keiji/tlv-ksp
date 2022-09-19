@@ -1,10 +1,81 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm'
     id "com.google.devtools.ksp" version "1.7.10-1.0.6"
+    id 'maven-publish'
+    id 'signing'
 }
 
 dependencies {
     implementation "com.google.devtools.ksp:symbol-processing-api:1.7.10-1.0.6"
 
     testImplementation 'junit:junit:4.13.2'
+}
+
+group 'dev.keiji.tlv'
+//version '0.1.0'
+version '0.1.0-SNAPSHOT'
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+Properties sonaTypeProps = new Properties()
+sonaTypeProps.load(project.rootProject.file("sonatype.properties").newDataInputStream())
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = "${group}"
+            artifactId = 'tlv-ksp'
+            version = "${version}"
+
+            from components.java
+
+            pom {
+                name = 'TLV-KSP'
+                description = 'TLV-KSP is a Kotlin library for encoding and decoding TLV data.'
+                url = 'https://github.com/keiji/tlv-ksp'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'keiji'
+                        name = 'ARIYAMA Keiji'
+                        email = 'keiji.ariyama@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'https://github.com/keiji/tlv-ksp.git'
+                    developerConnection = 'https://github.com/keiji/tlv-ksp.git'
+                    url = 'https://github.com/keiji/tlv-ksp'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('-SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+            def sonatypeUsername = sonaTypeProps.get('sonatypeUsername') ?: ""
+            def sonatypePassword = sonaTypeProps.get('sonatypePassword') ?: ""
+            credentials {
+                username = sonatypeUsername
+                password = sonatypePassword
+            }
+        }
+    }
+}
+
+signing {
+    useGpgCmd()
+    sign publishing.publications.mavenJava
 }

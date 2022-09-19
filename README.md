@@ -7,7 +7,15 @@ TLV-KSP is a Kotlin library for encoding and decoding TLV(Tag-Length-Value) data
 This library is now supported BER(Basic Encoding Rules) only.
 
 ### Setup
-TBD
+
+To add TLV-KSP to your project, include the following in your app module build.gradle file:
+
+```
+dependencies {
+    implementation("dev.keiji.tlv:tlv:${latest_version}")
+    ksp("dev.keiji.tlv:tlv-ksp:${latest_version}")
+}
+```
 
 ### Usage
 

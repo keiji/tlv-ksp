@@ -31,7 +31,7 @@ publishing {
 
             pom {
                 name = 'TLV-KSP'
-                description = 'TLV-KSP is a Kotlin library for encoding and decoding TLV data.'
+                description = 'TLV-KSP is a Kotlin library that compile-time encoder and decoder for TLV data.'
                 url = 'https://github.com/keiji/tlv-ksp'
                 licenses {
                     license {
@@ -57,10 +57,7 @@ publishing {
 
     repositories {
         maven {
-            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-            url = version.endsWith('-SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-
+            url = rootProject.ext.repoUrl
             credentials {
                 username = rootProject.ext.sonatypeUsername
                 password = rootProject.ext.sonatypePassword

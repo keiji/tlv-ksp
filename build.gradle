@@ -14,12 +14,15 @@ if (sonatypePropertiesFile.exists()) {
 
 ext {
     groupId = 'dev.keiji.tlv'
-// versionCode = '0.1.0'
-    versionCode = '0.1.0-SNAPSHOT'
+    versionCode = '0.1.0'
+//    versionCode = '0.1.0-SNAPSHOT'
 
     sonatypeUsername = sonaTypeProps.get('sonatypeUsername') ?: ""
     sonatypePassword = sonaTypeProps.get('sonatypePassword') ?: ""
 
+    def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+    repoUrl = versionCode.endsWith('-SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 }
 
 task clean(type: Delete) {

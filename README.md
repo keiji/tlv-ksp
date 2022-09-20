@@ -11,6 +11,18 @@ This library is now supported BER(Basic Encoding Rules) only.
 To add TLV-KSP to your project, include the following in your app module build.gradle file:
 
 ```
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+
+        maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
+    }
+}
+```
+
+```
 dependencies {
     implementation("dev.keiji.tlv:tlv:${latest_version}")
     ksp("dev.keiji.tlv:tlv-ksp:${latest_version}")

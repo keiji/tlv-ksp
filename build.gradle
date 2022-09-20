@@ -6,6 +6,22 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.7.10' apply false
 }
 
+Properties sonaTypeProps = new Properties()
+File sonatypePropertiesFile = project.rootProject.file("sonatype.properties")
+if (sonatypePropertiesFile.exists()) {
+    sonaTypeProps.load(sonatypePropertiesFile.newDataInputStream())
+}
+
+ext {
+    groupId = 'dev.keiji.tlv'
+// versionCode = '0.1.0'
+    versionCode = '0.1.0-SNAPSHOT'
+
+    sonatypeUsername = sonaTypeProps.get('sonatypeUsername') ?: ""
+    sonatypePassword = sonaTypeProps.get('sonatypePassword') ?: ""
+
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

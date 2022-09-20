@@ -10,8 +10,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
     }
 }
 rootProject.name = "TlvKsp"
 include ':app'
+include ':tlv'
 include ':tlv-ksp'

@@ -1,20 +1,20 @@
 plugins {
+    id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
-    id "com.google.devtools.ksp" version "1.7.10-1.0.6"
     id 'maven-publish'
     id 'signing'
 }
 
-dependencies {
-    implementation("dev.keiji.tlv:tlv:${rootProject.ext.versionCode}")
-    implementation "com.google.devtools.ksp:symbol-processing-api:1.7.10-1.0.6"
-
-    testImplementation 'junit:junit:4.13.2'
-}
-
 java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+
     withJavadocJar()
     withSourcesJar()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
 }
 
 group = rootProject.ext.groupId
@@ -24,14 +24,14 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId = "${group}"
-            artifactId = 'tlv-ksp'
+            artifactId = 'tlv'
             version = "${version}"
 
             from components.java
 
             pom {
-                name = 'TLV-KSP'
-                description = 'TLV-KSP is a Kotlin library for encoding and decoding TLV data.'
+                name = 'TLV'
+                description = 'TLV is a Kotlin library for encoding and decoding TLV data.'
                 url = 'https://github.com/keiji/tlv-ksp'
                 licenses {
                     license {

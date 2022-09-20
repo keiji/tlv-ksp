@@ -41,19 +41,19 @@ class BerTlvEncoder {
             content ?: return
 
             os.write(tag)
-            os.write(convertToLength(content.size))
+            os.write(convertToLength(content))
             os.write(content)
         }
 
-        fun convertToLength(array: ByteArray): ByteArray {
-            return convertToLength(BigInteger.valueOf(array.size.toLong()))
+        internal fun convertToLength(array: ByteArray): ByteArray {
+            return convertToLength(array.size)
         }
 
-        internal fun convertToLength(size: Int): ByteArray {
-            return convertToLength(BigInteger.valueOf(size.toLong()))
+        internal fun convertToLength(value: Int): ByteArray {
+            return convertToLength(BigInteger.valueOf(value.toLong()))
         }
 
-        private fun convertToLength(size: BigInteger): ByteArray {
+        internal fun convertToLength(size: BigInteger): ByteArray {
             if (size.compareTo(BigInteger.ZERO) == -1) {
                 throw IllegalArgumentException("size must not be less than 0.")
             }

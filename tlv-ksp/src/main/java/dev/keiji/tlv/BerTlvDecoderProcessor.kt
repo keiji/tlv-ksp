@@ -54,13 +54,14 @@ class BerTlvDecoderProcessor(
                     }
                 }
 
-            processClass(classDeclaration, annotatedProperties)
+            processClass(classDeclaration, annotatedProperties, logger)
         }
     }
 
     private fun processClass(
         classDeclaration: KSClassDeclaration,
-        annotatedProperties: Sequence<KSPropertyDeclaration>
+        annotatedProperties: Sequence<KSPropertyDeclaration>,
+        logger: KSPLogger,
     ) {
         val packageName = classDeclaration.containingFile!!.packageName.asString()
         val className = "${classDeclaration.simpleName.asString()}BerTlvDecoder"
@@ -96,7 +97,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
 }
         """.trimIndent()
 
-        val onItemDetected = generateOnItemDetected(annotatedProperties)
+        val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
 
         file.appendText("package $packageName")
             .appendText("")
@@ -110,7 +111,8 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
     }
 
     private fun generateOnItemDetected(
-        annotatedProperties: Sequence<KSPropertyDeclaration>
+        annotatedProperties: Sequence<KSPropertyDeclaration>,
+        logger: KSPLogger,
     ): String {
         val sb = StringBuilder()
 
@@ -119,7 +121,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
         sb.append("                    // Do nothing\n")
 
         annotatedProperties.forEach { prop ->
-            val tag = getTagAsString(prop)
+            val tag = getTagAsString(prop, logger)
             sb.append("                } else if (${tag}.contentEquals(tag)) {\n")
 
             val decClass = prop.type.resolve().declaration

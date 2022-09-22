@@ -181,4 +181,46 @@ class PrimitiveDataTest {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun encodeSubPrimitiveDatumTest() {
+        val data = SubPrimitiveDatum().also {
+            it.data = byteArrayOf(0x00)
+            it.data2 = byteArrayOf(0x01)
+        }
+        val expected = byteArrayOf(0x02, 0x01, 0x01, 0x01, 0x01, 0x00)
+
+        val actual = ByteArrayOutputStream().use {
+            data.writeTo(it)
+            it.toByteArray()
+        }
+
+        assertArrayEquals(expected, actual)
+    }
+
+    @Test
+    fun decodeSubPrimitiveDatumTest1() {
+        val data = byteArrayOf(0x01, 0x01, 0x00, 0x02, 0x01, 0x01)
+        val expected = SubPrimitiveDatum().also {
+            it.data = byteArrayOf(0x00)
+            it.data2 = byteArrayOf(0x01)
+        }
+
+        val actual = SubPrimitiveDatum().also { it.readFrom(data) }
+
+        assertArrayEquals(expected.data, actual.data)
+        assertArrayEquals(expected.data2, actual.data2)
+    }
+
+    @Test
+    fun decodeSubPrimitiveDatumTest2() {
+        val data = byteArrayOf(0x01, 0x01, 0x00, 0x02, 0x01, 0x01)
+        val expected = SubPrimitiveDatum().also {
+            it.data = byteArrayOf(0x00)
+            it.data2 = byteArrayOf(0x01)
+        }
+
+        val actual = PrimitiveDatum().also { it.readFrom(data) }
+
+        assertArrayEquals(expected.data, actual.data)
+    }
 }

@@ -47,7 +47,8 @@ class BerTlvEncoderProcessor(
         internal fun validateAnnotation(
             tag: ByteArray,
             className: String = "",
-            propertyName: String = ""
+            propertyName: String = "",
+            logger: KSPLogger? = null,
         ) {
             val firstByte: Int = tag.first().toInt() and 0xFF
 
@@ -125,22 +126,26 @@ class BerTlvEncoderProcessor(
                     }
                 }
 
-            validateAnnotations(annotatedProperties)
-            processClass(classDeclaration, annotatedProperties)
+            validateAnnotations(annotatedProperties, logger)
+            processClass(classDeclaration, annotatedProperties, logger)
         }
 
-        private fun validateAnnotations(annotatedProperties: Sequence<KSPropertyDeclaration>) {
+        private fun validateAnnotations(
+            annotatedProperties: Sequence<KSPropertyDeclaration>,
+            logger: KSPLogger,
+        ) {
             annotatedProperties.forEach { prop ->
                 val className = prop.parent.toString()
                 val propertyName = prop.simpleName.asString()
                 val tagArray = getTagAsByteArray(prop)
-                validateAnnotation(tagArray,className, propertyName)
+                validateAnnotation(tagArray,className, propertyName, logger)
             }
         }
 
         private fun processClass(
             classDeclaration: KSClassDeclaration,
-            annotatedProperties: Sequence<KSPropertyDeclaration>
+            annotatedProperties: Sequence<KSPropertyDeclaration>,
+            logger: KSPLogger,
         ) {
             val packageName = classDeclaration.containingFile!!.packageName.asString()
             val className = "${classDeclaration.simpleName.asString()}BerTlvEncoder"
@@ -180,7 +185,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             val sb = StringBuilder()
 
             annotatedProperties.forEach { prop ->
-                val tag = getTagAsString(prop)
+                val tag = getTagAsString(prop, logger)
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
 

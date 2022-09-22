@@ -16,6 +16,7 @@
 
 package dev.keiji.tlv
 
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 import java.io.OutputStream
@@ -27,7 +28,7 @@ internal fun OutputStream.appendText(str: String): OutputStream {
 }
 
 internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
-    val fileName = prop.containingFile!!.fileName
+    val fileName = prop.qualifiedName!!.asString()
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
@@ -58,7 +59,10 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
     return tagAsByteList.toByteArray()
 }
 
-internal fun getTagAsString(prop: KSPropertyDeclaration): String {
+internal fun getTagAsString(
+    prop: KSPropertyDeclaration,
+    logger: KSPLogger,
+): String {
     val arrayString = getTagAsByteArray(prop)
         .joinToString(", ") { "0x${it.toHex()}.toByte()" }
     return "byteArrayOf($arrayString)"

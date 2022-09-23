@@ -29,7 +29,42 @@ internal fun OutputStream.appendText(str: String): OutputStream {
     return this
 }
 
-internal val annotatedPropertyComparator =
+internal val annotatedPropertyOrderComparator =
+    Comparator<KSPropertyDeclaration> { obj1, obj2 ->
+        if (obj1 === obj2) {
+            return@Comparator 0
+        }
+
+        val obj1Order = getOrder(obj1)
+        val obj2Order = getOrder(obj2)
+
+        return@Comparator obj1Order.compareTo(obj2Order)
+    }
+
+internal fun getOrder(prop: KSPropertyDeclaration): Int {
+    val fileName = prop.qualifiedName!!.asString()
+
+    val berTlvItem = prop.annotations
+        .filter { it.validate() }
+        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
+    berTlvItem
+        ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
+
+    val argument = berTlvItem.arguments
+        .filter { it.validate() }
+        .firstOrNull { it.name!!.asString() == "order" }
+    argument
+        ?: throw IllegalArgumentException("$fileName BerTlv annotation argument `order` must be exist.")
+
+    val argumentValue = argument.value
+    if (argumentValue !is Int) {
+        throw IllegalArgumentException("$fileName BerTlv annotation argument `order` value must be instance of Int.")
+    }
+
+    return argumentValue
+}
+
+internal val annotatedPropertyTagComparator =
     Comparator<KSPropertyDeclaration> { obj1, obj2 ->
         if (obj1 === obj2) {
             return@Comparator 0

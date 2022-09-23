@@ -22,6 +22,9 @@ import java.io.InvalidObjectException
 import java.io.StreamCorruptedException
 import java.math.BigInteger
 
+/**
+ * BER-TLV Decoder.
+ */
 class BerTlvDecoder {
     companion object {
         private const val MASK_MSB_BITS = 0b100_00000
@@ -34,16 +37,42 @@ class BerTlvDecoder {
 
         private const val MAX_LENGTH_FILED_LENGTH = 126
 
+        /**
+         * An interface to receive event about detect TLV-item on InputStream.
+         * The Callback is set with BerTlvDecoder.readFrom method.
+         */
         interface Callback {
+
+            /**
+             * Called when a TLV-item has been detected.
+             *
+             * @param tag
+             * @param value
+             */
+            fun onItemDetected(tag: ByteArray, value: ByteArray)
+
+            /**
+             * Called when a large TLV-item has been detected.
+             *
+             * Note: BER-TLV length can be up to 126 bytes.
+             *
+             * @param tag
+             * @param length
+             * @param inputStream
+             */
             fun onLargeItemDetected(
                 tag: ByteArray,
                 length: BigInteger,
                 inputStream: InputStream
             )
-
-            fun onItemDetected(tag: ByteArray, data: ByteArray)
         }
 
+        /**
+         * Read TLV-item(s) from the InputStream.
+         *
+         * @param inputStream
+         * @param callback Callback to receive event about detect TLV-item
+         */
         fun readFrom(
             inputStream: InputStream,
             callback: Callback,
@@ -56,15 +85,15 @@ class BerTlvDecoder {
 
                 val isLargeItem = length.bitLength() > (Integer.SIZE - 1)
                 if (!isLargeItem) {
-                    val data = readData(inputStream, length)
-                    callback.onItemDetected(tag, data)
+                    val value = readValue(inputStream, length)
+                    callback.onItemDetected(tag, value)
                 } else {
                     callback.onLargeItemDetected(tag, length, inputStream)
                 }
             }
         }
 
-        private fun readData(
+        internal fun readValue(
             inputStream: InputStream,
             length: BigInteger,
         ): ByteArray {
@@ -84,7 +113,7 @@ class BerTlvDecoder {
             }
         }
 
-        fun readTag(inputStream: InputStream): ByteArray? {
+        internal fun readTag(inputStream: InputStream): ByteArray? {
             val tagStream = ByteArrayOutputStream()
 
             while (true) {
@@ -135,8 +164,6 @@ class BerTlvDecoder {
                         throw StreamCorruptedException()
                     } else if (readLength < (fieldLength - offset)) {
                         offset += readLength
-                    } else if (readLength < 0) {
-                        throw StreamCorruptedException()
                     } else {
                         break
                     }

@@ -20,29 +20,48 @@ import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.math.BigInteger
 
+/**
+ * BER-TLV Encoder.
+ */
 class BerTlvEncoder {
     companion object {
+
+        /**
+         * Write a TLV-item to OutputStream.
+         *
+         * @param tag
+         * @param length
+         * @param value
+         * @param os
+         */
         fun writeTo(
             tag: ByteArray,
             length: ByteArray,
-            content: ByteArray,
+            value: ByteArray,
             os: OutputStream
         ) {
             os.write(tag)
             os.write(length)
-            os.write(content)
+            os.write(value)
         }
 
+        /**
+         * Write a TLV-item to OutputStream.
+         *
+         * @param tag
+         * @param value
+         * @param os
+         */
         fun writeTo(
             tag: ByteArray,
-            content: ByteArray?,
+            value: ByteArray?,
             os: OutputStream
         ) {
-            content ?: return
+            value ?: return
 
             os.write(tag)
-            os.write(convertToLength(content))
-            os.write(content)
+            os.write(convertToLength(value))
+            os.write(value)
         }
 
         internal fun convertToLength(array: ByteArray): ByteArray {

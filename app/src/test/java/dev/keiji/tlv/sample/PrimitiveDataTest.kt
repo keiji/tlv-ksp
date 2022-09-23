@@ -187,7 +187,7 @@ class PrimitiveDataTest {
             it.data = byteArrayOf(0x00)
             it.data2 = byteArrayOf(0x01)
         }
-        val expected = byteArrayOf(0x02, 0x01, 0x01, 0x01, 0x01, 0x00)
+        val expected = byteArrayOf(0x01, 0x01, 0x00, 0x02, 0x01, 0x01)
 
         val actual = ByteArrayOutputStream().use {
             data.writeTo(it)

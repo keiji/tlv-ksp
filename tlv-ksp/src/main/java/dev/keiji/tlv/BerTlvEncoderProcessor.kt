@@ -127,7 +127,12 @@ class BerTlvEncoderProcessor(
                 }
 
             validateAnnotations(annotatedProperties, logger)
-            processClass(classDeclaration, annotatedProperties, logger)
+
+            processClass(
+                classDeclaration,
+                annotatedProperties.sortedWith(annotatedPropertyComparator),
+                logger
+            )
         }
 
         private fun validateAnnotations(
@@ -138,7 +143,7 @@ class BerTlvEncoderProcessor(
                 val className = prop.parent.toString()
                 val propertyName = prop.simpleName.asString()
                 val tagArray = getTagAsByteArray(prop)
-                validateAnnotation(tagArray,className, propertyName, logger)
+                validateAnnotation(tagArray, className, propertyName, logger)
             }
         }
 

@@ -130,7 +130,7 @@ class BerTlvEncoderProcessor(
 
             processClass(
                 classDeclaration,
-                annotatedProperties.sortedWith(annotatedPropertyComparator),
+                annotatedProperties.sortedWith(annotatedPropertyOrderComparator),
                 logger
             )
         }

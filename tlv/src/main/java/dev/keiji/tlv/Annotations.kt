@@ -20,4 +20,4 @@ package dev.keiji.tlv
 annotation class BerTlv
 
 @Target(AnnotationTarget.FIELD)
-annotation class BerTlvItem(val tag: ByteArray)
+annotation class BerTlvItem(val tag: ByteArray, val order :Int = 0)

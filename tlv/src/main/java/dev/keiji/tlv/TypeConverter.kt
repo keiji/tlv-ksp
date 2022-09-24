@@ -16,6 +16,8 @@
 
 package dev.keiji.tlv
 
+import java.nio.charset.Charset
+
 abstract class AbsTypeConverter<T : Any> {
     abstract fun convertFromByteArray(byteArray: ByteArray?): T?
     abstract fun convertToByteArray(data: T?): ByteArray?
@@ -38,14 +40,16 @@ class BooleanTypeConverter : AbsTypeConverter<Boolean>() {
     }
 }
 
+private val CHARSET_UTF8 = Charset.forName("UTF-8")
+
 class StringTypeConverter : AbsTypeConverter<String>() {
     override fun convertFromByteArray(byteArray: ByteArray?): String? {
         byteArray ?: return null
-        return String(byteArray)
+        return String(byteArray, charset = CHARSET_UTF8)
     }
 
     override fun convertToByteArray(data: String?): ByteArray? {
         data ?: return null
-        return data.toByteArray()
+        return data.toByteArray(charset = CHARSET_UTF8)
     }
 }

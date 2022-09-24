@@ -16,14 +16,8 @@
 
 package dev.keiji.tlv
 
-import kotlin.reflect.KClass
+internal fun ByteArray.toHex(delimiter: String) = this.joinToString(delimiter) { "0x${it.toHex()}" }
 
-@Target(AnnotationTarget.CLASS)
-annotation class BerTlv
+internal fun Byte.toHex() = "%02x".format(this).uppercase()
 
-@Target(AnnotationTarget.FIELD)
-annotation class BerTlvItem(
-    val tag: ByteArray,
-    val typeConverter: KClass<out AbsTypeConverter<*>> = NopConverter::class,
-    val order: Int = 0
-)
+internal fun String.decapitalize() = this.substring(0, 1).lowercase() + substring(1)

@@ -35,8 +35,10 @@ KSP will generate extend functions `writeTo(OutputStream)` and `readFrom(ByteArr
 
 ```
 fun PrimitiveDatum.writeTo(outputStream: OutputStream) {
+    val nopConverter = dev.keiji.tlv.NopConverter()
+
     data?.also {
-        BerTlvEncoder.writeTo(byteArrayOf(0x01.toByte()), it, outputStream)
+        BerTlvEncoder.writeTo(byteArrayOf(0x01.toByte()), nopConverter.convertToByteArray(it), outputStream)
     }
 
 }
@@ -60,11 +62,13 @@ fun PrimitiveDatum.readFrom(data: ByteArray) {
                 throw StreamCorruptedException("tag length is too large.")
             }
 
+            private val nopConverter = dev.keiji.tlv.NopConverter()
+
             override fun onItemDetected(tag: ByteArray, data: ByteArray) {
                 if (false) {
                     // Do nothing
                 } else if (byteArrayOf(0x01.toByte()).contentEquals(tag)) {
-                    this@readFrom.data = data
+                    this@readFrom.data = nopConverter.convertFromByteArray(data)
                 } else {
                     // Do nothing
                 }
@@ -76,6 +80,29 @@ fun PrimitiveDatum.readFrom(data: ByteArray) {
 }
 ```
 </details>
+
+#### TypeConverter
+
+```
+private val CHARSET_ASCII = Charset.forName("ASCII")
+
+class AsciiStringTypeConverter : AbsTypeConverter<String>() {
+    override fun convertFromByteArray(byteArray: ByteArray?): String? {
+        byteArray ?: return null
+        return String(byteArray, charset = CHARSET_ASCII)
+    }
+
+    override fun convertToByteArray(data: String?): ByteArray? {
+        data ?: return null
+        return data.toByteArray(charset = CHARSET_ASCII)
+    }
+}
+```
+
+```
+    @BerTlvItem(tag = [0x0F], typeConverter = AsciiStringTypeConverter::class)
+    var stringData3: String? = null,
+```
 
 License
 ========

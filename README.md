@@ -87,13 +87,11 @@ fun PrimitiveDatum.readFrom(data: ByteArray) {
 private val CHARSET_ASCII = Charset.forName("ASCII")
 
 class AsciiStringTypeConverter : AbsTypeConverter<String>() {
-    override fun convertFromByteArray(byteArray: ByteArray?): String? {
-        byteArray ?: return null
+    override fun convertFromByteArray(byteArray: ByteArray): String {
         return String(byteArray, charset = CHARSET_ASCII)
     }
 
-    override fun convertToByteArray(data: String?): ByteArray? {
-        data ?: return null
+    override fun convertToByteArray(data: String): ByteArray {
         return data.toByteArray(charset = CHARSET_ASCII)
     }
 }

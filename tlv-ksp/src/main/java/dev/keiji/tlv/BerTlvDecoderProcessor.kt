@@ -20,6 +20,8 @@ import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
 import java.lang.StringBuilder
+import java.util.*
+import kotlin.collections.HashMap
 
 class BerTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -116,12 +118,29 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
     ): String {
         val sb = StringBuilder()
 
+        val converterTable = HashMap<String, String>()
+        val converters = annotatedProperties
+            .map { prop -> getConverterAsString(prop, logger) }
+            .distinct()
+        converters.forEach { converter ->
+            val variableName = converter
+                .split(".").last()
+                .decapitalize()
+            sb.append("            private val $variableName = ${converter}()\n")
+
+            converterTable[converter] = variableName
+        }
+
+        sb.append("\n")
+
         sb.append("            override fun onItemDetected(tag: ByteArray, data: ByteArray) {\n")
         sb.append("                if (false) {\n")
         sb.append("                    // Do nothing\n")
 
         annotatedProperties.forEach { prop ->
             val tag = getTagAsString(prop, logger)
+            val converter = getConverterAsString(prop, logger)
+            val converterVariableName = converterTable[converter]
             sb.append("                } else if (${tag}.contentEquals(tag)) {\n")
 
             val decClass = prop.type.resolve().declaration
@@ -129,7 +148,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
                 val className = decClass.simpleName.asString()
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(data) }\n")
             } else {
-                sb.append("                    this@readFrom.${prop.simpleName.asString()} = data\n")
+                sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(data)\n")
             }
         }
 

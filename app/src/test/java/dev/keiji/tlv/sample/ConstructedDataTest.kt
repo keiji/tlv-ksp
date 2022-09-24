@@ -16,6 +16,7 @@ class ConstructedDataTest {
             it.data1 = byteArrayOf(0x07)
             it.data2 = true
             it.data3 = "Hello!"
+            it.data4 = 0x07F
         }
 
         val expected = byteArrayOf(
@@ -25,6 +26,7 @@ class ConstructedDataTest {
             0x1F, 0x02, 0x01, 0x07,
             0x1F, 0x03, 0x01, 0xFF.toByte(),
             0x1F, 0x81.toByte(), 0x03, 0x06, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x21,
+            0x03, 0x01, 0x7F,
         )
 
         val actual = ByteArrayOutputStream().use {
@@ -45,6 +47,7 @@ class ConstructedDataTest {
             0x1F, 0x02, 0x01, 0x07,
             0x1F, 0x03, 0x01, 0xFF.toByte(),
             0x1F, 0x81.toByte(), 0x03, 0x06, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x21,
+            0x03, 0x01, 0x7F,
         )
 
         val expected = ConstructedData().also {
@@ -55,6 +58,7 @@ class ConstructedDataTest {
             it.data1 = byteArrayOf(0x07)
             it.data2 = true
             it.data3 = "Hello!"
+            it.data4 = 0x7F
         }
 
         val actual = ConstructedData().also { it.readFrom(data) }

@@ -19,23 +19,26 @@ package dev.keiji.tlv
 import java.nio.charset.Charset
 
 abstract class AbsTypeConverter<T : Any> {
-    abstract fun convertFromByteArray(byteArray: ByteArray?): T?
-    abstract fun convertToByteArray(data: T?): ByteArray?
+    abstract fun convertFromByteArray(byteArray: ByteArray): T
+    abstract fun convertToByteArray(data: T): ByteArray
 }
 
 class NopConverter : AbsTypeConverter<ByteArray>() {
-    override fun convertFromByteArray(byteArray: ByteArray?): ByteArray? = byteArray
-    override fun convertToByteArray(data: ByteArray?): ByteArray? = data
+    override fun convertFromByteArray(byteArray: ByteArray): ByteArray = byteArray
+    override fun convertToByteArray(data: ByteArray): ByteArray = data
+}
+
+class ByteTypeConverter : AbsTypeConverter<Byte>() {
+    override fun convertFromByteArray(byteArray: ByteArray): Byte = byteArray[0]
+    override fun convertToByteArray(data: Byte): ByteArray = byteArrayOf(data)
 }
 
 class BooleanTypeConverter : AbsTypeConverter<Boolean>() {
-    override fun convertFromByteArray(byteArray: ByteArray?): Boolean? {
-        byteArray ?: return null
+    override fun convertFromByteArray(byteArray: ByteArray): Boolean {
         return byteArray[0] != 0x00.toByte()
     }
 
-    override fun convertToByteArray(data: Boolean?): ByteArray? {
-        data ?: return null
+    override fun convertToByteArray(data: Boolean): ByteArray {
         return byteArrayOf(if (data) 0xFF.toByte() else 0x00)
     }
 }
@@ -43,13 +46,11 @@ class BooleanTypeConverter : AbsTypeConverter<Boolean>() {
 private val CHARSET_UTF8 = Charset.forName("UTF-8")
 
 class StringTypeConverter : AbsTypeConverter<String>() {
-    override fun convertFromByteArray(byteArray: ByteArray?): String? {
-        byteArray ?: return null
+    override fun convertFromByteArray(byteArray: ByteArray): String {
         return String(byteArray, charset = CHARSET_UTF8)
     }
 
-    override fun convertToByteArray(data: String?): ByteArray? {
-        data ?: return null
+    override fun convertToByteArray(data: String): ByteArray {
         return data.toByteArray(charset = CHARSET_UTF8)
     }
 }

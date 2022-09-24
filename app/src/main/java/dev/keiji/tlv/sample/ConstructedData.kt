@@ -1,9 +1,6 @@
 package dev.keiji.tlv.sample
 
-import dev.keiji.tlv.BerTlv
-import dev.keiji.tlv.BerTlvItem
-import dev.keiji.tlv.BooleanTypeConverter
-import dev.keiji.tlv.StringTypeConverter
+import dev.keiji.tlv.*
 
 @BerTlv
 data class ConstructedData(
@@ -18,6 +15,9 @@ data class ConstructedData(
 
     @BerTlvItem(tag = [0x01F, 0x81.toByte(), 0x03], typeConverter = StringTypeConverter::class)
     var data3: String? = null,
+
+    @BerTlvItem(tag = [0x03], typeConverter = ByteTypeConverter::class)
+    var data4: Byte? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -32,6 +32,7 @@ data class ConstructedData(
         } else if (other.data1 != null) return false
         if (data2 != other.data2) return false
         if (data3 != other.data3) return false
+        if (data4 != other.data4) return false
 
         return true
     }
@@ -41,6 +42,7 @@ data class ConstructedData(
         result = 31 * result + (data1?.contentHashCode() ?: 0)
         result = 31 * result + (data2?.hashCode() ?: 0)
         result = 31 * result + (data3?.hashCode() ?: 0)
+        result = 31 * result + (data4 ?: 0)
         return result
     }
 }

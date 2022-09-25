@@ -214,10 +214,10 @@ internal fun getTagAsString(
     return "byteArrayOf($arrayString)"
 }
 
-internal fun getConverterAsString(
+internal fun getQualifiedName(
     prop: KSPropertyDeclaration,
     logger: KSPLogger,
-): Pair<String, String> {
+): String {
     val fileName = prop.qualifiedName!!.asString()
 
     val berTlvItem = prop.annotations
@@ -234,15 +234,7 @@ internal fun getConverterAsString(
 
     val argumentValue = argument.value as KSType
 
-    return Pair(
-        argumentValue.declaration.packageName.asString(),
-        argumentValue.declaration.qualifiedName!!.asString()
-    )
+    return argumentValue.declaration.qualifiedName!!.asString()
 }
 
-internal fun generateVariableName(packageName: String, qualifiedName: String): String {
-    return qualifiedName.subSequence(packageName.length + 1, qualifiedName.length)
-        .toString()
-        .replace(".", "")
-        .decapitalize()
-}
+internal fun generateVariableName(qualifiedName: String): String = qualifiedName.replace(".", "_")

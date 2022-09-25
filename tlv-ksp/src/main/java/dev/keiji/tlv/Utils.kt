@@ -239,3 +239,9 @@ internal fun getConverterAsString(
         argumentValue.declaration.qualifiedName!!.asString()
     )
 }
+
+internal fun stripPackage(packageName: String, qualifiedName: String): String {
+    return qualifiedName.subSequence(packageName.length, qualifiedName.length - 1)
+        .toString()
+
+}

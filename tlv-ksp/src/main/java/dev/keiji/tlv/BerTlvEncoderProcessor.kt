@@ -114,12 +114,6 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                 .appendText(classTemplate2)
         }
 
-        private fun stripPackage(packageName: String, qualifiedName: String): String {
-            return qualifiedName.subSequence(packageName.length, qualifiedName.length - 1)
-                .toString()
-
-        }
-
         private fun generateWriteTo(
             annotatedProperties: Sequence<KSPropertyDeclaration>
         ): String {

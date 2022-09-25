@@ -240,8 +240,9 @@ internal fun getConverterAsString(
     )
 }
 
-internal fun stripPackage(packageName: String, qualifiedName: String): String {
-    return qualifiedName.subSequence(packageName.length + 1, qualifiedName.length - 1)
+internal fun generateVariableName(packageName: String, qualifiedName: String): String {
+    return qualifiedName.subSequence(packageName.length + 1, qualifiedName.length)
         .toString()
-
+        .replace(".", "")
+        .decapitalize()
 }

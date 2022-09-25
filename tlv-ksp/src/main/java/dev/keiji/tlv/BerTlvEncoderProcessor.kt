@@ -125,7 +125,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                 .distinct()
             converterPairs.forEach { converterPair ->
                 val (packageName, qualifiedName) = converterPair
-                val variableName = stripPackage(packageName, qualifiedName)
+                val variableName = generateVariableName(packageName, qualifiedName)
                 sb.append("    val $variableName = ${qualifiedName}()\n")
 
                 converterTable[qualifiedName] = variableName

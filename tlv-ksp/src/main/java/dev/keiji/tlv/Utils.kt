@@ -241,7 +241,7 @@ internal fun getConverterAsString(
 }
 
 internal fun stripPackage(packageName: String, qualifiedName: String): String {
-    return qualifiedName.subSequence(packageName.length, qualifiedName.length - 1)
+    return qualifiedName.subSequence(packageName.length + 1, qualifiedName.length - 1)
         .toString()
 
 }

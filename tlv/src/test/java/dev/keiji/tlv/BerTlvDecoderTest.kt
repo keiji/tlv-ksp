@@ -1,9 +1,11 @@
 package dev.keiji.tlv
 
 import org.junit.Assert
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.io.InvalidObjectException
 import java.math.BigInteger
 import kotlin.random.Random
@@ -89,5 +91,39 @@ class BerTlvDecoderTest {
         } catch (exception: InvalidObjectException) {
             System.out.println(exception)
         }
+    }
+
+    @Test
+    fun streamFinishedTest1() {
+        val data = byteArrayOf(
+            0x01, 0x02, 0x01, 0x00,
+            0x00, 0x00, // The end of stream
+            0x05, 0x01, 0x0F
+        )
+
+        BerTlvDecoder.readFrom(
+            ByteArrayInputStream(data),
+            object : BerTlvDecoder.Companion.Callback {
+                override fun onItemDetected(tag: ByteArray, value: ByteArray) {
+                    if (tag.contentEquals(byteArrayOf(0x01))) {
+                        assertArrayEquals(byteArrayOf(0x01, 0x00), value)
+                    }
+                    if (tag.contentEquals(byteArrayOf(0x00))) {
+                        fail()
+                    }
+                    if (tag.contentEquals(byteArrayOf(0x05))) {
+                        assertArrayEquals(byteArrayOf(0x0F), value)
+                        fail()
+                    }
+                }
+
+                override fun onLargeItemDetected(
+                    tag: ByteArray,
+                    length: BigInteger,
+                    inputStream: InputStream
+                ) {
+                    fail()
+                }
+            })
     }
 }

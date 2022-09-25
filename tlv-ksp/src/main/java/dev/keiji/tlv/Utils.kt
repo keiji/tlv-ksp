@@ -217,7 +217,7 @@ internal fun getTagAsString(
 internal fun getConverterAsString(
     prop: KSPropertyDeclaration,
     logger: KSPLogger,
-): String {
+): Pair<String, String> {
     val fileName = prop.qualifiedName!!.asString()
 
     val berTlvItem = prop.annotations
@@ -234,5 +234,8 @@ internal fun getConverterAsString(
 
     val argumentValue = argument.value as KSType
 
-    return argumentValue.declaration.qualifiedName!!.asString()
+    return Pair(
+        argumentValue.declaration.packageName.asString(),
+        argumentValue.declaration.qualifiedName!!.asString()
+    )
 }

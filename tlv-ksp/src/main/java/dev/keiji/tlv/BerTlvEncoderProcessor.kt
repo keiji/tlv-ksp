@@ -114,30 +114,35 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                 .appendText(classTemplate2)
         }
 
+        private fun stripPackage(packageName: String, qualifiedName: String): String {
+            return qualifiedName.subSequence(packageName.length, qualifiedName.length - 1)
+                .toString()
+
+        }
+
         private fun generateWriteTo(
             annotatedProperties: Sequence<KSPropertyDeclaration>
         ): String {
             val sb = StringBuilder()
 
             val converterTable = HashMap<String, String>()
-            val converters = annotatedProperties
+            val converterPairs = annotatedProperties
                 .map { prop -> getConverterAsString(prop, logger) }
                 .distinct()
-            converters.forEach { converter ->
-                val variableName = converter
-                    .split(".").last()
-                    .decapitalize()
-                sb.append("    val $variableName = ${converter}()\n")
+            converterPairs.forEach { converterPair ->
+                val (packageName, qualifiedName) = converterPair
+                val variableName = stripPackage(packageName, qualifiedName)
+                sb.append("    val $variableName = ${qualifiedName}()\n")
 
-                converterTable[converter] = variableName
+                converterTable[qualifiedName] = variableName
             }
 
             sb.append("\n")
 
             annotatedProperties.forEach { prop ->
                 val tag = getTagAsString(prop, logger)
-                val converter = getConverterAsString(prop, logger)
-                val converterVariableName = converterTable[converter]
+                val (_, qualifiedName) = getConverterAsString(prop, logger)
+                val converterVariableName = converterTable[qualifiedName]
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
 

@@ -19,5 +19,3 @@ package dev.keiji.tlv
 internal fun ByteArray.toHex(delimiter: String) = this.joinToString(delimiter) { "0x${it.toHex()}" }
 
 internal fun Byte.toHex() = "%02x".format(this).uppercase()
-
-internal fun String.decapitalize() = this.substring(0, 1).lowercase() + substring(1)

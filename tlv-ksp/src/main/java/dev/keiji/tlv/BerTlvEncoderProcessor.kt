@@ -120,24 +120,23 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             val sb = StringBuilder()
 
             val converterTable = HashMap<String, String>()
-            val converters = annotatedProperties
+            val converterPairs = annotatedProperties
                 .map { prop -> getConverterAsString(prop, logger) }
                 .distinct()
-            converters.forEach { converter ->
-                val variableName = converter
-                    .split(".").last()
-                    .decapitalize()
-                sb.append("    val $variableName = ${converter}()\n")
+            converterPairs.forEach { converterPair ->
+                val (packageName, qualifiedName) = converterPair
+                val variableName = generateVariableName(packageName, qualifiedName)
+                sb.append("    val $variableName = ${qualifiedName}()\n")
 
-                converterTable[converter] = variableName
+                converterTable[qualifiedName] = variableName
             }
 
             sb.append("\n")
 
             annotatedProperties.forEach { prop ->
                 val tag = getTagAsString(prop, logger)
-                val converter = getConverterAsString(prop, logger)
-                val converterVariableName = converterTable[converter]
+                val (_, qualifiedName) = getConverterAsString(prop, logger)
+                val converterVariableName = converterTable[qualifiedName]
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
 

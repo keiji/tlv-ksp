@@ -17,6 +17,7 @@
 package dev.keiji.tlv
 
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
@@ -47,7 +48,7 @@ internal fun getOrder(prop: KSPropertyDeclaration): Int {
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
+        .firstOrNull { isTargetAnnotation(it) }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -178,7 +179,7 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
+        .firstOrNull { isTargetAnnotation(it) }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -205,6 +206,12 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
     return tagAsByteList.toByteArray()
 }
 
+internal fun isTargetAnnotation(it: KSAnnotation): Boolean {
+    val existBerTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
+    val existBerTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
+    return existBerTlvItem || existBerTlvItemList
+}
+
 internal fun getTagAsString(
     prop: KSPropertyDeclaration,
     logger: KSPLogger,
@@ -222,7 +229,7 @@ internal fun getQualifiedName(
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
+        .firstOrNull { isTargetAnnotation(it) }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -237,4 +244,25 @@ internal fun getQualifiedName(
     return argumentValue.declaration.qualifiedName!!.asString()
 }
 
+internal fun getAnnotationName(
+    prop: KSPropertyDeclaration,
+    logger: KSPLogger,
+): String {
+    val berTlvItem = prop.annotations
+        .filter { it.validate() }
+        .firstOrNull { isTargetAnnotation(it) }
+    berTlvItem
+        ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
+
+    return berTlvItem.shortName.asString()
+}
+
 internal fun generateVariableName(qualifiedName: String): String = qualifiedName.replace(".", "_")
+
+fun getGenericsTypeNameFromList(prop: KSPropertyDeclaration): String? {
+    val argument = prop.type.resolve().arguments
+    if (argument.size == 0) {
+        return null
+    }
+    return argument[0].type?.resolve()?.declaration?.qualifiedName?.asString()
+}

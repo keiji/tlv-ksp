@@ -17,10 +17,11 @@
 package dev.keiji.tlv
 
 import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
-import java.lang.StringBuilder
-import kotlin.collections.HashMap
 
 class BerTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -28,10 +29,17 @@ class BerTlvDecoderProcessor(
 ) : SymbolProcessor {
 
     private lateinit var berTlvClasses: Sequence<KSAnnotated>
+    private lateinit var berTlvClassesStringList: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         berTlvClasses = resolver.getSymbolsWithAnnotation(BerTlv::class.qualifiedName!!)
         val ret = berTlvClasses.filter { !it.validate() }.toList()
+
+        berTlvClassesStringList = berTlvClasses
+            .filter { it is KSClassDeclaration && it.validate() }
+            .map { it as KSClassDeclaration }
+            .mapNotNull { it.qualifiedName?.asString() }
+            .toList()
 
         berTlvClasses
             .filter { it is KSClassDeclaration && it.validate() }
@@ -50,9 +58,7 @@ class BerTlvDecoderProcessor(
             val annotatedProperties = classDeclaration.getAllProperties()
                 .filter { it.validate() }
                 .filter { prop ->
-                    prop.annotations.any { anno ->
-                        anno.shortName.asString() == BerTlvItem::class.simpleName
-                    }
+                    prop.annotations.any { anno -> isTargetAnnotation(anno) }
                 }
 
             processClass(classDeclaration, annotatedProperties, logger)
@@ -135,17 +141,31 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
         sb.append("                    // Do nothing\n")
 
         annotatedProperties.forEach { prop ->
+            val annotationName = getAnnotationName(prop, logger)
             val tag = getTagAsString(prop, logger)
             val qualifiedName = getQualifiedName(prop, logger)
             val converterVariableName = converterTable[qualifiedName]
+
+            val className = prop.type.resolve().declaration.qualifiedName?.asString()
+
             sb.append("                } else if (${tag}.contentEquals(tag)) {\n")
 
-            val decClass = prop.type.resolve().declaration
-            if (berTlvClasses.contains(decClass)) {
-                val className = decClass.simpleName.asString()
-                sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(data) }\n")
-            } else {
-                sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(data)\n")
+            if (annotationName == BerTlvItem::class.simpleName) {
+                if (berTlvClassesStringList.contains(className)) {
+                    sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(data) }\n")
+                } else {
+                    sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(data)\n")
+                }
+            } else if (annotationName == BerTlvItemList::class.simpleName) {
+                val genericClassName = getGenericsTypeNameFromList(prop)
+
+                sb.append("                    val list = this@readFrom.${prop.simpleName.asString()} ?: ${className}()\n")
+                if (berTlvClassesStringList.contains(genericClassName)) {
+                    sb.append("                    list.add(${genericClassName}().also { it.readFrom(data) })\n")
+                } else {
+                    sb.append("                    list.add(${converterVariableName}.convertFromByteArray(data))\n")
+                }
+                sb.append("                    this@readFrom.${prop.simpleName.asString()} = list\n")
             }
         }
 

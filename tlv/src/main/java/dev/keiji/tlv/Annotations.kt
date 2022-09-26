@@ -27,3 +27,10 @@ annotation class BerTlvItem(
     val typeConverter: KClass<out AbsTypeConverter<*>> = NopConverter::class,
     val order: Int = 0
 )
+
+@Target(AnnotationTarget.FIELD)
+annotation class BerTlvItemList(
+    val tag: ByteArray,
+    val typeConverter: KClass<out AbsTypeConverter<*>> = NopConverter::class,
+    val order: Int = 0
+)

@@ -18,6 +18,12 @@ data class ConstructedData(
 
     @BerTlvItem(tag = [0x03], typeConverter = ByteTypeConverter::class)
     var data4: Byte? = null,
+
+    @BerTlvItemList(tag = [0x05], typeConverter = ByteTypeConverter::class)
+    var data5: ArrayList<Byte>? = null,
+
+    @BerTlvItemList(tag = [0x06])
+    var data6: ArrayList<PrimitiveMultiBytesTagData>? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -33,6 +39,8 @@ data class ConstructedData(
         if (data2 != other.data2) return false
         if (data3 != other.data3) return false
         if (data4 != other.data4) return false
+        if (data5 != other.data5) return false
+        if (data6 != other.data6) return false
 
         return true
     }
@@ -43,6 +51,8 @@ data class ConstructedData(
         result = 31 * result + (data2?.hashCode() ?: 0)
         result = 31 * result + (data3?.hashCode() ?: 0)
         result = 31 * result + (data4 ?: 0)
+        result = 31 * result + (data5?.hashCode() ?: 0)
+        result = 31 * result + (data6?.hashCode() ?: 0)
         return result
     }
 }

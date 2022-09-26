@@ -28,11 +28,19 @@ class BerTlvEncoderProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
 ) : SymbolProcessor {
+
     private lateinit var berTlvClasses: Sequence<KSAnnotated>
+    private lateinit var berTlvClassesStringList: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         berTlvClasses = resolver.getSymbolsWithAnnotation(BerTlv::class.qualifiedName!!)
         val ret = berTlvClasses.filter { !it.validate() }.toList()
+
+        berTlvClassesStringList = berTlvClasses
+            .filter { it is KSClassDeclaration && it.validate() }
+            .map { it as KSClassDeclaration }
+            .mapNotNull { it.qualifiedName?.asString() }
+            .toList()
 
         berTlvClasses
             .filter { it is KSClassDeclaration && it.validate() }
@@ -51,9 +59,7 @@ class BerTlvEncoderProcessor(
             val annotatedProperties = classDeclaration.getAllProperties()
                 .filter { it.validate() }
                 .filter { prop ->
-                    prop.annotations.any { anno ->
-                        anno.shortName.asString() == BerTlvItem::class.simpleName
-                    }
+                    prop.annotations.any { anno -> isTargetAnnotation(anno) }
                 }
 
             validateAnnotations(annotatedProperties, logger)
@@ -133,25 +139,45 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             sb.append("\n")
 
             annotatedProperties.forEach { prop ->
+                val annotationName = getAnnotationName(prop, logger)
                 val tag = getTagAsString(prop, logger)
                 val qualifiedName = getQualifiedName(prop, logger)
                 val converterVariableName = converterTable[qualifiedName]
+
+                val className = prop.type.resolve().declaration.qualifiedName?.asString()
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
 
-                val decClass = prop.type.resolve().declaration
-                if (berTlvClasses.contains(decClass)) {
-                    sb.append("    ${propName}.also {\n")
-                    sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
-                    sb.append("            ${propName}.writeTo(baos)\n")
-                    sb.append("            baos.toByteArray()\n")
-                    sb.append("        }\n")
-                    sb.append("        BerTlvEncoder.writeTo(${tag}, data, outputStream)\n")
-                    sb.append("    }\n")
-                } else {
-                    sb.append("    ${propName}.also {\n")
-                    sb.append("        BerTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
-                    sb.append("    }\n")
+                if (annotationName == BerTlvItem::class.simpleName) {
+                    if (berTlvClassesStringList.contains(className)) {
+                        sb.append("    ${propName}.also {\n")
+                        sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
+                        sb.append("            ${propName}.writeTo(baos)\n")
+                        sb.append("            baos.toByteArray()\n")
+                        sb.append("        }\n")
+                        sb.append("        BerTlvEncoder.writeTo(${tag}, data, outputStream)\n")
+                        sb.append("    }\n")
+                    } else {
+                        sb.append("    ${propName}.also {\n")
+                        sb.append("        BerTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
+                        sb.append("    }\n")
+                    }
+                } else if (annotationName == BerTlvItemList::class.simpleName) {
+                    val genericClassName = getGenericsTypeNameFromList(prop)
+
+                    if (berTlvClassesStringList.contains(genericClassName)) {
+                        sb.append("    ${propName}.forEach {\n")
+                        sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
+                        sb.append("            it.writeTo(baos)\n")
+                        sb.append("            baos.toByteArray()\n")
+                        sb.append("        }\n")
+                        sb.append("        BerTlvEncoder.writeTo(${tag}, data, outputStream)\n")
+                        sb.append("    }\n")
+                    } else {
+                        sb.append("    ${propName}.forEach {\n")
+                        sb.append("        BerTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
+                        sb.append("    }\n")
+                    }
                 }
             }
 

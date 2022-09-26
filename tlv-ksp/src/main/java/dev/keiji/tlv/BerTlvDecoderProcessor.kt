@@ -17,10 +17,11 @@
 package dev.keiji.tlv
 
 import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
-import java.lang.StringBuilder
-import kotlin.collections.HashMap
 
 class BerTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -50,9 +51,13 @@ class BerTlvDecoderProcessor(
             val annotatedProperties = classDeclaration.getAllProperties()
                 .filter { it.validate() }
                 .filter { prop ->
-                    prop.annotations.any { anno ->
+                    val berTlvItem = prop.annotations.any { anno ->
                         anno.shortName.asString() == BerTlvItem::class.simpleName
                     }
+                    val berTlvItemList = prop.annotations.any { anno ->
+                        anno.shortName.asString() == BerTlvItemList::class.simpleName
+                    }
+                    berTlvItem || berTlvItemList
                 }
 
             processClass(classDeclaration, annotatedProperties, logger)
@@ -135,15 +140,21 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
         sb.append("                    // Do nothing\n")
 
         annotatedProperties.forEach { prop ->
+            val annotationName = getAnnotationName(prop, logger)
             val tag = getTagAsString(prop, logger)
             val qualifiedName = getQualifiedName(prop, logger)
             val converterVariableName = converterTable[qualifiedName]
             sb.append("                } else if (${tag}.contentEquals(tag)) {\n")
 
             val decClass = prop.type.resolve().declaration
+            val className = decClass.simpleName.asString()
+
             if (berTlvClasses.contains(decClass)) {
-                val className = decClass.simpleName.asString()
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(data) }\n")
+            } else if (annotationName == BerTlvItemList::class.simpleName) {
+                sb.append("                    val list = this@readFrom.${prop.simpleName.asString()} ?: ${className}()\n")
+                sb.append("                    list.add(${converterVariableName}.convertFromByteArray(data))\n")
+                sb.append("                    this@readFrom.${prop.simpleName.asString()} = list\n")
             } else {
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(data)\n")
             }

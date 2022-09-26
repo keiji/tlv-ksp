@@ -47,7 +47,11 @@ internal fun getOrder(prop: KSPropertyDeclaration): Int {
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
+        .firstOrNull {
+            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
+            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
+            berTlvItem || berTlvItemList
+        }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -178,7 +182,11 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
+        .firstOrNull {
+            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
+            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
+            berTlvItem || berTlvItemList
+        }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -222,7 +230,11 @@ internal fun getQualifiedName(
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
+        .firstOrNull {
+            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
+            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
+            berTlvItem || berTlvItemList
+        }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -235,6 +247,23 @@ internal fun getQualifiedName(
     val argumentValue = argument.value as KSType
 
     return argumentValue.declaration.qualifiedName!!.asString()
+}
+
+internal fun getAnnotationName(
+    prop: KSPropertyDeclaration,
+    logger: KSPLogger,
+): String {
+    val berTlvItem = prop.annotations
+        .filter { it.validate() }
+        .firstOrNull {
+            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
+            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
+            berTlvItem || berTlvItemList
+        }
+    berTlvItem
+        ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
+
+    return berTlvItem.shortName.asString()
 }
 
 internal fun generateVariableName(qualifiedName: String): String = qualifiedName.replace(".", "_")

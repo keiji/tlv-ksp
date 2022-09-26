@@ -51,9 +51,13 @@ class BerTlvEncoderProcessor(
             val annotatedProperties = classDeclaration.getAllProperties()
                 .filter { it.validate() }
                 .filter { prop ->
-                    prop.annotations.any { anno ->
+                    val berTlvItem = prop.annotations.any { anno ->
                         anno.shortName.asString() == BerTlvItem::class.simpleName
                     }
+                    val berTlvItemList = prop.annotations.any { anno ->
+                        anno.shortName.asString() == BerTlvItemList::class.simpleName
+                    }
+                    berTlvItem || berTlvItemList
                 }
 
             validateAnnotations(annotatedProperties, logger)
@@ -133,13 +137,14 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             sb.append("\n")
 
             annotatedProperties.forEach { prop ->
+                val annotationName = getAnnotationName(prop, logger)
                 val tag = getTagAsString(prop, logger)
                 val qualifiedName = getQualifiedName(prop, logger)
                 val converterVariableName = converterTable[qualifiedName]
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
-
                 val decClass = prop.type.resolve().declaration
+
                 if (berTlvClasses.contains(decClass)) {
                     sb.append("    ${propName}.also {\n")
                     sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
@@ -147,6 +152,10 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                     sb.append("            baos.toByteArray()\n")
                     sb.append("        }\n")
                     sb.append("        BerTlvEncoder.writeTo(${tag}, data, outputStream)\n")
+                    sb.append("    }\n")
+                } else if (annotationName == BerTlvItemList::class.simpleName) {
+                    sb.append("    ${propName}.forEach {\n")
+                    sb.append("        BerTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
                     sb.append("    }\n")
                 } else {
                     sb.append("    ${propName}.also {\n")

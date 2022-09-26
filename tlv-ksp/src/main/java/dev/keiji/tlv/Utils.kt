@@ -17,6 +17,7 @@
 package dev.keiji.tlv
 
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
@@ -47,11 +48,7 @@ internal fun getOrder(prop: KSPropertyDeclaration): Int {
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull {
-            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
-            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
-            berTlvItem || berTlvItemList
-        }
+        .firstOrNull { isTargetAnnotation(it) }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -182,11 +179,7 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull {
-            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
-            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
-            berTlvItem || berTlvItemList
-        }
+        .firstOrNull { isTargetAnnotation(it) }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -213,6 +206,12 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
     return tagAsByteList.toByteArray()
 }
 
+private fun isTargetAnnotation(it: KSAnnotation): Boolean {
+    val existBerTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
+    val existBerTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
+    return existBerTlvItem || existBerTlvItemList
+}
+
 internal fun getTagAsString(
     prop: KSPropertyDeclaration,
     logger: KSPLogger,
@@ -230,11 +229,7 @@ internal fun getQualifiedName(
 
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull {
-            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
-            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
-            berTlvItem || berTlvItemList
-        }
+        .firstOrNull { isTargetAnnotation(it) }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 
@@ -255,11 +250,7 @@ internal fun getAnnotationName(
 ): String {
     val berTlvItem = prop.annotations
         .filter { it.validate() }
-        .firstOrNull {
-            val berTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
-            val berTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
-            berTlvItem || berTlvItemList
-        }
+        .firstOrNull { isTargetAnnotation(it) }
     berTlvItem
         ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
 

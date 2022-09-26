@@ -40,6 +40,7 @@ data class ConstructedData(
         if (data3 != other.data3) return false
         if (data4 != other.data4) return false
         if (data5 != other.data5) return false
+        if (data6 != other.data6) return false
 
         return true
     }
@@ -51,6 +52,7 @@ data class ConstructedData(
         result = 31 * result + (data3?.hashCode() ?: 0)
         result = 31 * result + (data4 ?: 0)
         result = 31 * result + (data5?.hashCode() ?: 0)
+        result = 31 * result + (data6?.hashCode() ?: 0)
         return result
     }
 }

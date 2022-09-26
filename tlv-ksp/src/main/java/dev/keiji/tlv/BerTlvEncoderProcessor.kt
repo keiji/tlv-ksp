@@ -143,11 +143,10 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                 val tag = getTagAsString(prop, logger)
                 val qualifiedName = getQualifiedName(prop, logger)
                 val converterVariableName = converterTable[qualifiedName]
+
+                val className = prop.type.resolve().declaration.qualifiedName?.asString()
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
-
-                val decClass = prop.type.resolve().declaration
-                val className = decClass.qualifiedName?.asString()
 
                 if (annotationName == BerTlvItem::class.simpleName) {
                     if (berTlvClassesStringList.contains(className)) {
@@ -179,11 +178,6 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                         sb.append("        BerTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
                         sb.append("    }\n")
                     }
-                }
-
-                if (berTlvClasses.contains(decClass)) {
-                } else if (annotationName == BerTlvItemList::class.simpleName) {
-                } else {
                 }
             }
 

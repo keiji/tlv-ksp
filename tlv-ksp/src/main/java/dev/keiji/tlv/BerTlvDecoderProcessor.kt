@@ -145,10 +145,10 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
             val tag = getTagAsString(prop, logger)
             val qualifiedName = getQualifiedName(prop, logger)
             val converterVariableName = converterTable[qualifiedName]
-            sb.append("                } else if (${tag}.contentEquals(tag)) {\n")
 
-            val decClass = prop.type.resolve().declaration
-            val className = decClass.qualifiedName?.asString()
+            val className = prop.type.resolve().declaration.qualifiedName?.asString()
+
+            sb.append("                } else if (${tag}.contentEquals(tag)) {\n")
 
             if (annotationName == BerTlvItem::class.simpleName) {
                 if (berTlvClassesStringList.contains(className)) {

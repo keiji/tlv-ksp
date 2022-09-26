@@ -19,8 +19,11 @@ data class ConstructedData(
     @BerTlvItem(tag = [0x03], typeConverter = ByteTypeConverter::class)
     var data4: Byte? = null,
 
-    @BerTlvItemList(tag = [0x03])
-    var data5: ArrayList<ByteArray>? = null
+    @BerTlvItemList(tag = [0x05], typeConverter = ByteTypeConverter::class)
+    var data5: ArrayList<Byte>? = null,
+
+    @BerTlvItemList(tag = [0x06])
+    var data6: ArrayList<PrimitiveMultiBytesTagData>? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -29,10 +29,17 @@ class BerTlvDecoderProcessor(
 ) : SymbolProcessor {
 
     private lateinit var berTlvClasses: Sequence<KSAnnotated>
+    private lateinit var berTlvClassesStringList: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         berTlvClasses = resolver.getSymbolsWithAnnotation(BerTlv::class.qualifiedName!!)
         val ret = berTlvClasses.filter { !it.validate() }.toList()
+
+        berTlvClassesStringList = berTlvClasses
+            .filter { it is KSClassDeclaration && it.validate() }
+            .map { it as KSClassDeclaration }
+            .mapNotNull { it.qualifiedName?.asString() }
+            .toList()
 
         berTlvClasses
             .filter { it is KSClassDeclaration && it.validate() }
@@ -147,16 +154,24 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
             sb.append("                } else if (${tag}.contentEquals(tag)) {\n")
 
             val decClass = prop.type.resolve().declaration
-            val className = decClass.simpleName.asString()
+            val className = decClass.qualifiedName?.asString()
 
-            if (berTlvClasses.contains(decClass)) {
-                sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(data) }\n")
+            if (annotationName == BerTlvItem::class.simpleName) {
+                if (berTlvClassesStringList.contains(className)) {
+                    sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(data) }\n")
+                } else {
+                    sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(data)\n")
+                }
             } else if (annotationName == BerTlvItemList::class.simpleName) {
+                val genericClassName = getGenericsTypeNameFromList(prop)
+
                 sb.append("                    val list = this@readFrom.${prop.simpleName.asString()} ?: ${className}()\n")
-                sb.append("                    list.add(${converterVariableName}.convertFromByteArray(data))\n")
+                if (berTlvClassesStringList.contains(genericClassName)) {
+                    sb.append("                    list.add(${genericClassName}().also { it.readFrom(data) })\n")
+                } else {
+                    sb.append("                    list.add(${converterVariableName}.convertFromByteArray(data))\n")
+                }
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = list\n")
-            } else {
-                sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(data)\n")
             }
         }
 

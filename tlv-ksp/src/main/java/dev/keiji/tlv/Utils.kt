@@ -258,3 +258,11 @@ internal fun getAnnotationName(
 }
 
 internal fun generateVariableName(qualifiedName: String): String = qualifiedName.replace(".", "_")
+
+fun getGenericsTypeNameFromList(prop: KSPropertyDeclaration): String? {
+    val argument = prop.type.resolve().arguments
+    if (argument.size == 0) {
+        return null
+    }
+    return argument[0].type?.resolve()?.declaration?.qualifiedName?.asString()
+}

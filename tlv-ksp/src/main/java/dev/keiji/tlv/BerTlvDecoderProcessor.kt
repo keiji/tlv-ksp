@@ -58,13 +58,7 @@ class BerTlvDecoderProcessor(
             val annotatedProperties = classDeclaration.getAllProperties()
                 .filter { it.validate() }
                 .filter { prop ->
-                    val berTlvItem = prop.annotations.any { anno ->
-                        anno.shortName.asString() == BerTlvItem::class.simpleName
-                    }
-                    val berTlvItemList = prop.annotations.any { anno ->
-                        anno.shortName.asString() == BerTlvItemList::class.simpleName
-                    }
-                    berTlvItem || berTlvItemList
+                    prop.annotations.any { anno -> isTargetAnnotation(anno) }
                 }
 
             processClass(classDeclaration, annotatedProperties, logger)

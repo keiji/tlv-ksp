@@ -206,7 +206,7 @@ internal fun getTagAsByteArray(prop: KSPropertyDeclaration): ByteArray {
     return tagAsByteList.toByteArray()
 }
 
-private fun isTargetAnnotation(it: KSAnnotation): Boolean {
+internal fun isTargetAnnotation(it: KSAnnotation): Boolean {
     val existBerTlvItem = it.shortName.asString() == BerTlvItem::class.simpleName
     val existBerTlvItemList = it.shortName.asString() == BerTlvItemList::class.simpleName
     return existBerTlvItem || existBerTlvItemList

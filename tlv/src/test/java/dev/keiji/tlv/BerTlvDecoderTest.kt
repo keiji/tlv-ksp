@@ -20,7 +20,7 @@ class BerTlvDecoderTest {
         val expected = byteArrayOf(0x4F)
 
         val actual = BerTlvDecoder.readTag(inputStream)
-        Assert.assertArrayEquals(expected, actual)
+        assertArrayEquals(expected, actual)
     }
 
     @Test
@@ -32,7 +32,7 @@ class BerTlvDecoderTest {
         val expected = byteArrayOf(0x7F, 0x74)
 
         val actual = BerTlvDecoder.readTag(inputStream)
-        Assert.assertArrayEquals(expected, actual)
+        assertArrayEquals(expected, actual)
     }
 
     @Test
@@ -45,7 +45,7 @@ class BerTlvDecoderTest {
         val expected = byteArrayOf(0x7F, 0x84.toByte(), 0x74)
 
         val actual = BerTlvDecoder.readTag(inputStream)
-        Assert.assertArrayEquals(expected, actual)
+        assertArrayEquals(expected, actual)
     }
 
     @Test
@@ -55,7 +55,7 @@ class BerTlvDecoderTest {
         val expected = BigInteger.ONE
 
         val actual = BerTlvDecoder.readLength(inputStream)
-        Assert.assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -65,7 +65,7 @@ class BerTlvDecoderTest {
         val expected = BigInteger.valueOf(127)
 
         val actual = BerTlvDecoder.readLength(inputStream)
-        Assert.assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -75,7 +75,7 @@ class BerTlvDecoderTest {
         val expected = BigInteger(+1, byteArrayOf(0b11111111.toByte(), 0x00000001))
 
         val actual = BerTlvDecoder.readLength(inputStream)
-        Assert.assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test

@@ -95,6 +95,9 @@ class BerTlvEncoder {
 
                 val sizeBits = 0b10000000 or (bitLength / 8)
                 val sizeBytes = size.toByteArray()
+
+                // BigInteger.toByteArray() will append 0x00 byte if the byte of byteArray[0] MSB is 1.
+                // Here is trim needless 0x00.
                 val offset = if (sizeBytes[0] == 0x00.toByte()) 1 else 0
 
                 baos.write(sizeBits)

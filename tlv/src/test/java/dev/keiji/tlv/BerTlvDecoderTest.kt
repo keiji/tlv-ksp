@@ -1,8 +1,12 @@
 package dev.keiji.tlv
 
 import org.junit.Assert
+<<<<<<< HEAD
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.fail
+=======
+import org.junit.Assert.*
+>>>>>>> 7d8c181593c6b10e11659cba4f65691ecfa2f00f
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -94,6 +98,43 @@ class BerTlvDecoderTest {
     }
 
     @Test
+    fun readUnknownLengthTagTest1() {
+        val data = byteArrayOf(
+            0x01, 0x80.toByte(),
+            0x01, 0x02, 0x03,
+            0x00, 0x00
+        )
+        val expected = byteArrayOf(0x01, 0x02, 0x03, 0x00, 0x00)
+
+        var onUndefinedLengthItemDetectedFlag = false
+
+        val inputStream = ByteArrayInputStream(data)
+        BerTlvDecoder.readFrom(inputStream, object : BerTlvDecoder.Callback {
+            override fun onUnknownLengthItemDetected(tag: ByteArray, inputStream: InputStream) {
+                assertArrayEquals(
+                    expected,
+                    inputStream.readAllBytes()
+                )
+                onUndefinedLengthItemDetectedFlag = true
+            }
+
+            override fun onItemDetected(tag: ByteArray, value: ByteArray) {
+                fail()
+            }
+
+            override fun onLargeItemDetected(
+                tag: ByteArray,
+                length: BigInteger,
+                inputStream: InputStream
+            ) {
+                fail()
+            }
+        })
+
+        assertTrue(onUndefinedLengthItemDetectedFlag)
+    }
+
+    @Test
     fun streamFinishedTest1() {
         val data = byteArrayOf(
             0x01, 0x02, 0x01, 0x00,
@@ -103,7 +144,7 @@ class BerTlvDecoderTest {
 
         BerTlvDecoder.readFrom(
             ByteArrayInputStream(data),
-            object : BerTlvDecoder.Companion.Callback {
+            object : BerTlvDecoder.Callback {
                 override fun onItemDetected(tag: ByteArray, value: ByteArray) {
                     if (tag.contentEquals(byteArrayOf(0x01))) {
                         assertArrayEquals(byteArrayOf(0x01, 0x00), value)

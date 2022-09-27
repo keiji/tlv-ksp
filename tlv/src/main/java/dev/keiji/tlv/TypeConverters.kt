@@ -19,7 +19,7 @@ package dev.keiji.tlv
 import java.nio.charset.Charset
 
 abstract class AbsTypeConverter<T : Any> {
-    abstract fun convertFromByteArray(byteArray: ByteArray): T
+    abstract fun convertFromByteArray(byteArray: ByteArray): T?
     abstract fun convertToByteArray(data: T): ByteArray
 }
 

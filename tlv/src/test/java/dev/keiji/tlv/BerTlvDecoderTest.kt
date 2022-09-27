@@ -1,12 +1,6 @@
 package dev.keiji.tlv
 
-import org.junit.Assert
-<<<<<<< HEAD
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.fail
-=======
 import org.junit.Assert.*
->>>>>>> 7d8c181593c6b10e11659cba4f65691ecfa2f00f
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.InputStream

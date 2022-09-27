@@ -38,36 +38,6 @@ class BerTlvDecoder {
         private const val MAX_LENGTH_FILED_LENGTH = 126
 
         /**
-         * An interface to receive event about detect TLV-item on InputStream.
-         * The Callback is set with BerTlvDecoder.readFrom method.
-         */
-        interface Callback {
-
-            /**
-             * Called when a TLV-item has been detected.
-             *
-             * @param tag
-             * @param value
-             */
-            fun onItemDetected(tag: ByteArray, value: ByteArray)
-
-            /**
-             * Called when a large TLV-item has been detected.
-             *
-             * Note: BER-TLV length can be up to 126 bytes.
-             *
-             * @param tag
-             * @param length
-             * @param inputStream
-             */
-            fun onLargeItemDetected(
-                tag: ByteArray,
-                length: BigInteger,
-                inputStream: InputStream
-            )
-        }
-
-        /**
          * Read TLV-item(s) from the InputStream.
          *
          * @param inputStream
@@ -82,6 +52,10 @@ class BerTlvDecoder {
                 tag ?: break
 
                 val length = readLength(inputStream)
+                if (length == null) {
+                    callback.onUnknownLengthItemDetected(tag, inputStream)
+                    continue
+                }
 
                 val isLargeItem = length.bitLength() > (Integer.SIZE - 1)
                 if (!isLargeItem) {
@@ -139,10 +113,15 @@ class BerTlvDecoder {
             }
         }
 
-        internal fun readLength(inputStream: InputStream): BigInteger {
+        internal fun readLength(inputStream: InputStream): BigInteger? {
             val b = inputStream.read()
             if (b < 0) {
                 throw StreamCorruptedException()
+            }
+
+            // Length undefined
+            if (b == MASK_MSB_BITS) {
+                return null
             }
 
             val longDef = b and MASK_MSB_BITS != 0
@@ -170,6 +149,49 @@ class BerTlvDecoder {
                 }
                 return BigInteger(+1, lengthBytes)
             }
+        }
+    }
+
+    /**
+     * An interface to receive event about detect TLV-item on InputStream.
+     * The Callback is set with BerTlvDecoder.readFrom method.
+     */
+    interface Callback {
+
+        /**
+         * Called when a TLV-item has been detected.
+         *
+         * @param tag
+         * @param value
+         */
+        fun onItemDetected(tag: ByteArray, value: ByteArray)
+
+        /**
+         * Called when an unknown length TLV-item has been detected.
+         *
+         * @param tag
+         * @param inputStream
+         */
+        fun onUnknownLengthItemDetected(
+            tag: ByteArray,
+            inputStream: InputStream
+        ) {
+        }
+
+        /**
+         * Called when a large TLV-item has been detected.
+         *
+         * Note: BER-TLV length can be up to 126 bytes.
+         *
+         * @param tag
+         * @param length
+         * @param inputStream
+         */
+        fun onLargeItemDetected(
+            tag: ByteArray,
+            length: BigInteger,
+            inputStream: InputStream
+        ) {
         }
     }
 }

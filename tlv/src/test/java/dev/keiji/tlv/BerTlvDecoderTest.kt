@@ -1,9 +1,10 @@
 package dev.keiji.tlv
 
 import org.junit.Assert
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.io.InvalidObjectException
 import java.math.BigInteger
 import kotlin.random.Random
@@ -89,5 +90,42 @@ class BerTlvDecoderTest {
         } catch (exception: InvalidObjectException) {
             System.out.println(exception)
         }
+    }
+
+    @Test
+    fun readUnknownLengthTagTest1() {
+        val data = byteArrayOf(
+            0x01, 0x80.toByte(),
+            0x01, 0x02, 0x03,
+            0x00, 0x00
+        )
+        val expected = byteArrayOf(0x01, 0x02, 0x03, 0x00, 0x00)
+
+        var onUndefinedLengthItemDetectedFlag = false
+
+        val inputStream = ByteArrayInputStream(data)
+        BerTlvDecoder.readFrom(inputStream, object : BerTlvDecoder.Callback {
+            override fun onUnknownLengthItemDetected(tag: ByteArray, inputStream: InputStream) {
+                assertArrayEquals(
+                    expected,
+                    inputStream.readAllBytes()
+                )
+                onUndefinedLengthItemDetectedFlag = true
+            }
+
+            override fun onItemDetected(tag: ByteArray, value: ByteArray) {
+                fail()
+            }
+
+            override fun onLargeItemDetected(
+                tag: ByteArray,
+                length: BigInteger,
+                inputStream: InputStream
+            ) {
+                fail()
+            }
+        })
+
+        assertTrue(onUndefinedLengthItemDetectedFlag)
     }
 }

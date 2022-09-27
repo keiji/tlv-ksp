@@ -79,16 +79,26 @@ import java.math.BigInteger
         """.trimIndent()
 
         val classTemplate1 = """
-fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
+fun ${classDeclaration.simpleName.asString()}.readFrom(
+    data: ByteArray,
+    postCallback: BerTlvDecoder.Callback? = null,
+) {
 
     BerTlvDecoder.readFrom(ByteArrayInputStream(data),
-        object : BerTlvDecoder.Companion.Callback {
+        object : BerTlvDecoder.Callback {
             override fun onLargeItemDetected(
                 tag: ByteArray,
                 length: BigInteger,
                 inputStream: InputStream
             ) {
-                throw StreamCorruptedException("tag length is too large.")
+                postCallback?.onLargeItemDetected(tag, length, inputStream)
+            }
+
+            override fun onUnknownLengthItemDetected(
+                tag: ByteArray,
+                inputStream: InputStream
+            ) {
+                postCallback?.onUnknownLengthItemDetected(tag, inputStream)
             }
         """.trimIndent()
 
@@ -130,7 +140,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
 
         sb.append("\n")
 
-        sb.append("            override fun onItemDetected(tag: ByteArray, data: ByteArray) {\n")
+        sb.append("            override fun onItemDetected(tag: ByteArray, value: ByteArray) {\n")
         sb.append("                if (false) {\n")
         sb.append("                    // Do nothing\n")
 
@@ -152,6 +162,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(data: ByteArray) {
         sb.append("                } else {\n")
         sb.append("                    // Do nothing\n")
         sb.append("                }\n")
+        sb.append("                postCallback?.onItemDetected(tag, value)\n")
         sb.append("            }\n")
         return sb.toString()
     }

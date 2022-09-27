@@ -57,6 +57,11 @@ class BerTlvDecoder {
                     continue
                 }
 
+                // If tag:0x00 length:0x00 have been detected the parser decide stream have been finished.
+                if (byteArrayOf(0x00).contentEquals(tag) && BigInteger.ZERO.equals(length)) {
+                    break
+                }
+
                 val isLargeItem = length.bitLength() > (Integer.SIZE - 1)
                 if (!isLargeItem) {
                     val value = readValue(inputStream, length)

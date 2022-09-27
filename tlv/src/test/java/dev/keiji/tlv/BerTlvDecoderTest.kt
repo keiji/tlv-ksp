@@ -1,6 +1,5 @@
 package dev.keiji.tlv
 
-import org.junit.Assert
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -21,7 +20,7 @@ class BerTlvDecoderTest {
         val expected = byteArrayOf(0x4F)
 
         val actual = BerTlvDecoder.readTag(inputStream)
-        Assert.assertArrayEquals(expected, actual)
+        assertArrayEquals(expected, actual)
     }
 
     @Test
@@ -33,7 +32,7 @@ class BerTlvDecoderTest {
         val expected = byteArrayOf(0x7F, 0x74)
 
         val actual = BerTlvDecoder.readTag(inputStream)
-        Assert.assertArrayEquals(expected, actual)
+        assertArrayEquals(expected, actual)
     }
 
     @Test
@@ -46,7 +45,7 @@ class BerTlvDecoderTest {
         val expected = byteArrayOf(0x7F, 0x84.toByte(), 0x74)
 
         val actual = BerTlvDecoder.readTag(inputStream)
-        Assert.assertArrayEquals(expected, actual)
+        assertArrayEquals(expected, actual)
     }
 
     @Test
@@ -56,7 +55,7 @@ class BerTlvDecoderTest {
         val expected = BigInteger.ONE
 
         val actual = BerTlvDecoder.readLength(inputStream)
-        Assert.assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -66,7 +65,7 @@ class BerTlvDecoderTest {
         val expected = BigInteger.valueOf(127)
 
         val actual = BerTlvDecoder.readLength(inputStream)
-        Assert.assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -76,7 +75,7 @@ class BerTlvDecoderTest {
         val expected = BigInteger(+1, byteArrayOf(0b11111111.toByte(), 0x00000001))
 
         val actual = BerTlvDecoder.readLength(inputStream)
-        Assert.assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -127,5 +126,39 @@ class BerTlvDecoderTest {
         })
 
         assertTrue(onUndefinedLengthItemDetectedFlag)
+    }
+
+    @Test
+    fun streamFinishedTest1() {
+        val data = byteArrayOf(
+            0x01, 0x02, 0x01, 0x00,
+            0x00, 0x00, // The end of stream
+            0x05, 0x01, 0x0F
+        )
+
+        BerTlvDecoder.readFrom(
+            ByteArrayInputStream(data),
+            object : BerTlvDecoder.Callback {
+                override fun onItemDetected(tag: ByteArray, value: ByteArray) {
+                    if (tag.contentEquals(byteArrayOf(0x01))) {
+                        assertArrayEquals(byteArrayOf(0x01, 0x00), value)
+                    }
+                    if (tag.contentEquals(byteArrayOf(0x00))) {
+                        fail()
+                    }
+                    if (tag.contentEquals(byteArrayOf(0x05))) {
+                        assertArrayEquals(byteArrayOf(0x0F), value)
+                        fail()
+                    }
+                }
+
+                override fun onLargeItemDetected(
+                    tag: ByteArray,
+                    length: BigInteger,
+                    inputStream: InputStream
+                ) {
+                    fail()
+                }
+            })
     }
 }

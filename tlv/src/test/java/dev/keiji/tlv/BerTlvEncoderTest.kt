@@ -28,4 +28,11 @@ class BerTlvEncoderTest {
             println(exception)
         }
     }
+
+    @Test
+    fun convertToLengthTest3() {
+        val expected = byteArrayOf(0x82.toByte(), 0x01, 0x03)
+        val actual = BerTlvEncoder.convertToLength(259)
+        Assert.assertArrayEquals(expected, actual)
+    }
 }

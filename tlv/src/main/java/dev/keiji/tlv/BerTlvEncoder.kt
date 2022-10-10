@@ -93,7 +93,9 @@ class BerTlvEncoder {
                 var bitLength = size.bitLength()
                 bitLength += if (bitLength % 8 == 0) 0 else 1
 
-                val sizeBits = 0b10000000 or (bitLength / 8)
+                val sizeBits = 0b10000000 or (bitLength / Byte.SIZE_BITS) +
+                        if ((bitLength % Byte.SIZE_BITS) != 0) 1 else 0
+
                 val sizeBytes = size.toByteArray()
 
                 // BigInteger.toByteArray() will append 0x00 byte if the byte of byteArray[0] MSB is 1.

@@ -14,8 +14,8 @@ if (sonatypePropertiesFile.exists()) {
 
 ext {
     groupId = 'dev.keiji.tlv'
-    versionCode = '0.2.2'
-//    versionCode = '0.2.2-SNAPSHOT'
+    versionCode = '0.2.3'
+//    versionCode = '0.2.3-SNAPSHOT'
 
     sonatypeUsername = sonaTypeProps.get('sonatypeUsername') ?: ""
     sonatypePassword = sonaTypeProps.get('sonatypePassword') ?: ""

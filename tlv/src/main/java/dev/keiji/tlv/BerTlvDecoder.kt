@@ -72,7 +72,7 @@ class BerTlvDecoder {
             }
         }
 
-        internal fun readValue(
+        fun readValue(
             inputStream: InputStream,
             length: BigInteger,
         ): ByteArray {
@@ -92,7 +92,7 @@ class BerTlvDecoder {
             }
         }
 
-        internal fun readTag(inputStream: InputStream): ByteArray? {
+        fun readTag(inputStream: InputStream): ByteArray? {
             val tagStream = ByteArrayOutputStream()
 
             while (true) {
@@ -118,7 +118,7 @@ class BerTlvDecoder {
             }
         }
 
-        internal fun readLength(inputStream: InputStream): BigInteger? {
+        fun readLength(inputStream: InputStream): BigInteger? {
             val b = inputStream.read()
             if (b < 0) {
                 throw StreamCorruptedException()

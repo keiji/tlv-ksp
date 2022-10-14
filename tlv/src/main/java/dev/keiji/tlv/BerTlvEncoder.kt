@@ -64,15 +64,15 @@ class BerTlvEncoder {
             os.write(value)
         }
 
-        internal fun convertToLength(array: ByteArray): ByteArray {
+        fun convertToLength(array: ByteArray): ByteArray {
             return convertToLength(array.size)
         }
 
-        internal fun convertToLength(value: Int): ByteArray {
+        fun convertToLength(value: Int): ByteArray {
             return convertToLength(BigInteger.valueOf(value.toLong()))
         }
 
-        internal fun convertToLength(size: BigInteger): ByteArray {
+        fun convertToLength(size: BigInteger): ByteArray {
             if (size.compareTo(BigInteger.ZERO) == -1) {
                 throw IllegalArgumentException("size must not be less than 0.")
             }

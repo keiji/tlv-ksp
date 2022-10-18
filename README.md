@@ -162,6 +162,13 @@ class AsciiStringTypeConverter : AbsTypeConverter<String>() {
     var stringData3: String? = null,
 ```
 
+OR
+
+```
+    @CompactTlvItem(tag = 0x1, typeConverter = AsciiStringTypeConverter::class)
+    var stringData: String? = null,
+```
+
 License
 ========
 

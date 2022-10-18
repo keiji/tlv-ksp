@@ -68,6 +68,18 @@ class BerTlvEncoderProcessor(
             )
         }
 
+        private val annotatedPropertyOrderComparator =
+            Comparator<KSPropertyDeclaration> { obj1, obj2 ->
+                if (obj1 === obj2) {
+                    return@Comparator 0
+                }
+
+                val obj1Order = getOrder(obj1, BerTlvItem::class)
+                val obj2Order = getOrder(obj2, BerTlvItem::class)
+
+                return@Comparator obj1Order.compareTo(obj2Order)
+            }
+
         private fun validateAnnotations(
             annotatedProperties: Sequence<KSPropertyDeclaration>,
             logger: KSPLogger,

@@ -31,36 +31,27 @@ internal fun OutputStream.appendText(str: String): OutputStream {
     return this
 }
 
-internal val annotatedPropertyOrderComparator =
-    Comparator<KSPropertyDeclaration> { obj1, obj2 ->
-        if (obj1 === obj2) {
-            return@Comparator 0
-        }
-
-        val obj1Order = getOrder(obj1)
-        val obj2Order = getOrder(obj2)
-
-        return@Comparator obj1Order.compareTo(obj2Order)
-    }
-
-internal fun getOrder(prop: KSPropertyDeclaration): Int {
+internal fun getOrder(
+    prop: KSPropertyDeclaration,
+    annotationClass: KClass<*>,
+): Int {
     val fileName = prop.qualifiedName!!.asString()
 
-    val berTlvItem = prop.annotations
+    val item = prop.annotations
         .filter { it.validate() }
-        .firstOrNull { it.shortName.asString() == BerTlvItem::class.simpleName }
-    berTlvItem
-        ?: throw IllegalArgumentException("BerTlv annotation must be exist.")
+        .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
+    item
+        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
 
-    val argument = berTlvItem.arguments
+    val argument = item.arguments
         .filter { it.validate() }
         .firstOrNull { it.name!!.asString() == "order" }
     argument
-        ?: throw IllegalArgumentException("$fileName BerTlv annotation argument `order` must be exist.")
+        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `order` must be exist.")
 
     val argumentValue = argument.value
     if (argumentValue !is Int) {
-        throw IllegalArgumentException("$fileName BerTlv annotation argument `order` value must be instance of Int.")
+        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `order` value must be instance of Int.")
     }
 
     return argumentValue

@@ -24,27 +24,27 @@ import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
 import java.lang.StringBuilder
 
-private const val MASK_MSB_BITS = 0b100_00000
-private const val MASK_TAG_BITS = 0b00_0_11111
+private const val MAX_TAG_VALUE: Byte = 0b00001111
+private const val ZERO: Byte = 0
 
-class BerTlvEncoderProcessor(
+class CompactTlvEncoderProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
 ) : SymbolProcessor {
-    private lateinit var berTlvClasses: Sequence<KSAnnotated>
+    private lateinit var compactTlvClasses: Sequence<KSAnnotated>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        berTlvClasses = resolver.getSymbolsWithAnnotation(BerTlv::class.qualifiedName!!)
-        val ret = berTlvClasses.filter { !it.validate() }.toList()
+        compactTlvClasses = resolver.getSymbolsWithAnnotation(CompactTlv::class.qualifiedName!!)
+        val ret = compactTlvClasses.filter { !it.validate() }.toList()
 
-        berTlvClasses
+        compactTlvClasses
             .filter { it is KSClassDeclaration && it.validate() }
-            .forEach { it.accept(BerTlvVisitor(), Unit) }
+            .forEach { it.accept(CompactTlvVisitor(), Unit) }
 
         return ret
     }
 
-    private inner class BerTlvVisitor : KSVisitorVoid() {
+    private inner class CompactTlvVisitor : KSVisitorVoid() {
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             super.visitClassDeclaration(classDeclaration, data)
@@ -55,7 +55,7 @@ class BerTlvEncoderProcessor(
                 .filter { it.validate() }
                 .filter { prop ->
                     prop.annotations.any { anno ->
-                        anno.shortName.asString() == BerTlvItem::class.simpleName
+                        anno.shortName.asString() == CompactTlvItem::class.simpleName
                     }
                 }
 
@@ -75,8 +75,8 @@ class BerTlvEncoderProcessor(
             annotatedProperties.forEach { prop ->
                 val className = prop.parent.toString()
                 val propertyName = prop.simpleName.asString()
-                val tagArray = getTagAsByteArray(prop, BerTlvItem::class)
-                validateAnnotation(tagArray, className, propertyName, logger)
+                val tag = getTagAsByte(prop, CompactTlvItem::class)
+                validateAnnotation(tag, className, propertyName, logger)
             }
         }
 
@@ -86,7 +86,7 @@ class BerTlvEncoderProcessor(
             logger: KSPLogger,
         ) {
             val packageName = classDeclaration.containingFile!!.packageName.asString()
-            val className = "${classDeclaration.simpleName.asString()}BerTlvEncoder"
+            val className = "${classDeclaration.simpleName.asString()}CompactTlvEncoder"
             val file = codeGenerator.createNewFile(
                 Dependencies(true, classDeclaration.containingFile!!),
                 packageName,
@@ -94,7 +94,7 @@ class BerTlvEncoderProcessor(
             )
 
             val imports = """
-import dev.keiji.tlv.BerTlvEncoder
+import dev.keiji.tlv.CompactTlvEncoder
 import java.io.*
         """.trimIndent()
 
@@ -124,7 +124,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
             val converterTable = HashMap<String, String>()
             val converters = annotatedProperties
-                .map { prop -> getQualifiedName(prop, BerTlvItem::class, logger) }
+                .map { prop -> getQualifiedName(prop, CompactTlvItem::class, logger) }
                 .distinct()
             converters.forEach { qualifiedName ->
                 val variableName = generateVariableName(qualifiedName)
@@ -136,24 +136,24 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             sb.append("\n")
 
             annotatedProperties.forEach { prop ->
-                val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
-                val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
+                val tag = getTagAsString(prop, CompactTlvItem::class, logger)
+                val qualifiedName = getQualifiedName(prop, CompactTlvItem::class, logger)
                 val converterVariableName = converterTable[qualifiedName]
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
 
                 val decClass = prop.type.resolve().declaration
-                if (berTlvClasses.contains(decClass)) {
+                if (compactTlvClasses.contains(decClass)) {
                     sb.append("    ${propName}.also {\n")
                     sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
                     sb.append("            ${propName}.writeTo(baos)\n")
                     sb.append("            baos.toByteArray()\n")
                     sb.append("        }\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), data, outputStream)\n")
+                    sb.append("        CompactTlvEncoder.writeTo(${tag}, data, outputStream)\n")
                     sb.append("    }\n")
                 } else {
                     sb.append("    ${propName}.also {\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), ${converterVariableName}.convertToByteArray(it), outputStream)\n")
+                    sb.append("        CompactTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
                     sb.append("    }\n")
                 }
             }
@@ -164,55 +164,14 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
     companion object {
         internal fun validateAnnotation(
-            tag: ByteArray,
+            tag: Byte,
             className: String = "",
             propertyName: String = "",
             logger: KSPLogger? = null,
         ) {
-            val firstByte: Int = tag.first().toInt() and 0xFF
-
-            if ((firstByte and MASK_TAG_BITS) != MASK_TAG_BITS && tag.size > 1) {
+            if (tag > MAX_TAG_VALUE || tag < ZERO) {
                 val lead = lead(className, propertyName)
-                throw IllegalArgumentException(
-                    "$lead tag ${tag.toHex(":")} seems to short(1 byte) definition." +
-                            " However, it seems to long definition expectedly."
-                )
-            } else if ((firstByte and MASK_TAG_BITS) == MASK_TAG_BITS && tag.size < 2) {
-                val lead = lead(className, propertyName)
-                throw IllegalArgumentException(
-                    "$lead tag ${tag.toHex(":")} seems to long(n bytes) definition." +
-                            " However, it seems to short definition expectedly."
-                )
-            }
-
-            tag.forEachIndexed { index, b ->
-                // Skip index 0
-                if (index == 0) {
-                    return@forEachIndexed
-                }
-
-                val value = b.toInt() and 0xFF
-
-                // Check lastIndex(= tag.size - 1)
-                if (index == (tag.size - 1)) {
-                    if ((value and MASK_MSB_BITS) == MASK_MSB_BITS) {
-                        val lead = lead(className, propertyName)
-                        throw IllegalArgumentException(
-                            "$lead tag ${tag.toHex(":")} seems to be long(n bytes) definition." +
-                                    " last element ${tag[index].toHex()} seems to be continued."
-                        )
-                    }
-                    return@forEachIndexed
-                }
-
-                // index 1 to (lastIndex - 1)
-                if ((value and MASK_MSB_BITS) != MASK_MSB_BITS) {
-                    val lead = lead(className, propertyName)
-                    throw IllegalArgumentException(
-                        "$lead tag ${tag.toHex(":")} seems to be long(n bytes) definition." +
-                                " index $index element ${tag[index].toHex()} MSB must be true."
-                    )
-                }
+                throw IllegalArgumentException("$lead tag ${tag.toHex()} must be less or equals ${MAX_TAG_VALUE.toHex()}.")
             }
         }
     }

@@ -16,24 +16,11 @@
 
 package dev.keiji.tlv
 
-import kotlin.reflect.KClass
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
-@Target(AnnotationTarget.CLASS)
-annotation class BerTlv
-
-@Target(AnnotationTarget.FIELD)
-annotation class BerTlvItem(
-    val tag: ByteArray,
-    val typeConverter: KClass<out AbsTypeConverter<*>> = NopConverter::class,
-    val order: Int = 0
-)
-
-@Target(AnnotationTarget.CLASS)
-annotation class CompactTlv
-
-@Target(AnnotationTarget.FIELD)
-annotation class CompactTlvItem(
-    val tag: Byte,
-    val typeConverter: KClass<out AbsTypeConverter<*>> = NopConverter::class,
-    val order: Int = 0
-)
+class CompactTlvEncoderProvider : SymbolProcessorProvider {
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
+        CompactTlvEncoderProcessor(environment.codeGenerator, environment.logger)
+}

@@ -22,25 +22,25 @@ import com.google.devtools.ksp.validate
 import java.lang.StringBuilder
 import kotlin.collections.HashMap
 
-class BerTlvDecoderProcessor(
+class CompactTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
 ) : SymbolProcessor {
 
-    private lateinit var berTlvClasses: Sequence<KSAnnotated>
+    private lateinit var compactTlvClasses: Sequence<KSAnnotated>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        berTlvClasses = resolver.getSymbolsWithAnnotation(BerTlv::class.qualifiedName!!)
-        val ret = berTlvClasses.filter { !it.validate() }.toList()
+        compactTlvClasses = resolver.getSymbolsWithAnnotation(CompactTlv::class.qualifiedName!!)
+        val ret = compactTlvClasses.filter { !it.validate() }.toList()
 
-        berTlvClasses
+        compactTlvClasses
             .filter { it is KSClassDeclaration && it.validate() }
-            .forEach { it.accept(BerTlvVisitor(), Unit) }
+            .forEach { it.accept(CompactTlvVisitor(), Unit) }
 
         return ret
     }
 
-    private inner class BerTlvVisitor : KSVisitorVoid() {
+    private inner class CompactTlvVisitor : KSVisitorVoid() {
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             super.visitClassDeclaration(classDeclaration, data)
@@ -51,7 +51,7 @@ class BerTlvDecoderProcessor(
                 .filter { it.validate() }
                 .filter { prop ->
                     prop.annotations.any { anno ->
-                        anno.shortName.asString() == BerTlvItem::class.simpleName
+                        anno.shortName.asString() == CompactTlvItem::class.simpleName
                     }
                 }
 
@@ -65,7 +65,7 @@ class BerTlvDecoderProcessor(
         logger: KSPLogger,
     ) {
         val packageName = classDeclaration.containingFile!!.packageName.asString()
-        val className = "${classDeclaration.simpleName.asString()}BerTlvDecoder"
+        val className = "${classDeclaration.simpleName.asString()}CompactTlvDecoder"
         val file = codeGenerator.createNewFile(
             Dependencies(true, classDeclaration.containingFile!!),
             packageName,
@@ -73,33 +73,18 @@ class BerTlvDecoderProcessor(
         )
 
         val imports = """
-import dev.keiji.tlv.BerTlvDecoder
+import dev.keiji.tlv.CompactTlvDecoder
 import java.io.*
-import java.math.BigInteger
         """.trimIndent()
 
         val classTemplate1 = """
 fun ${classDeclaration.simpleName.asString()}.readFrom(
     data: ByteArray,
-    postCallback: BerTlvDecoder.Callback? = null,
+    postCallback: CompactTlvDecoder.Callback? = null,
 ) {
 
-    BerTlvDecoder.readFrom(ByteArrayInputStream(data),
-        object : BerTlvDecoder.Callback {
-            override fun onLargeItemDetected(
-                tag: ByteArray,
-                length: BigInteger,
-                inputStream: InputStream
-            ) {
-                postCallback?.onLargeItemDetected(tag, length, inputStream)
-            }
-
-            override fun onUnknownLengthItemDetected(
-                tag: ByteArray,
-                inputStream: InputStream
-            ) {
-                postCallback?.onUnknownLengthItemDetected(tag, inputStream)
-            }
+    CompactTlvDecoder.readFrom(ByteArrayInputStream(data),
+        object : CompactTlvDecoder.Callback {
         """.trimIndent()
 
         val classTemplate2 = """
@@ -129,7 +114,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
 
         val converterTable = HashMap<String, String>()
         val converters = annotatedProperties
-            .map { prop -> getQualifiedName(prop, BerTlvItem::class, logger) }
+            .map { prop -> getQualifiedName(prop, CompactTlvItem::class, logger) }
             .distinct()
         converters.forEach { qualifiedName ->
             val variableName = generateVariableName(qualifiedName)
@@ -140,18 +125,18 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
 
         sb.append("\n")
 
-        sb.append("            override fun onItemDetected(tag: ByteArray, value: ByteArray) {\n")
+        sb.append("            override fun onItemDetected(tag: Byte, value: ByteArray) {\n")
         sb.append("                if (false) {\n")
         sb.append("                    // Do nothing\n")
 
         annotatedProperties.forEach { prop ->
-            val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
-            val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
+            val tag = getTagAsString(prop, CompactTlvItem::class, logger)
+            val qualifiedName = getQualifiedName(prop, CompactTlvItem::class, logger)
             val converterVariableName = converterTable[qualifiedName]
-            sb.append("                } else if (byteArrayOf(${tagArray}).contentEquals(tag)) {\n")
+            sb.append("                } else if (${tag} == tag) {\n")
 
             val decClass = prop.type.resolve().declaration
-            if (berTlvClasses.contains(decClass)) {
+            if (compactTlvClasses.contains(decClass)) {
                 val className = decClass.simpleName.asString()
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(value) }\n")
             } else {

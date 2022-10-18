@@ -1,6 +1,5 @@
 package dev.keiji.tlv
 
-import junit.framework.Assert
 import org.junit.Assert.assertArrayEquals
 import org.junit.Test
 
@@ -90,60 +89,5 @@ class UtilsTest {
 
         assertArrayEquals(byteArray2, data[0])
         assertArrayEquals(byteArray1, data[1])
-    }
-
-    @Test
-    fun validateAnnotation1() {
-        validateAnnotation(byteArrayOf(0x6E))
-    }
-
-    @Test
-    fun validateAnnotation2() {
-        validateAnnotation(byteArrayOf(0x5F, 0x6E))
-    }
-
-    @Test
-    fun validateAnnotation3() {
-        validateAnnotation(byteArrayOf(0x5F, 0xFF.toByte(), 0x81.toByte(), 0x01))
-    }
-
-    @Test
-    fun validateAnnotation_exception1() {
-        try {
-            validateAnnotation(byteArrayOf(0x4F, 0x01))
-            Assert.fail()
-        } catch (exception: IllegalArgumentException) {
-            println(exception)
-        }
-    }
-
-    @Test
-    fun validateAnnotation_exception2() {
-        try {
-            validateAnnotation(byteArrayOf(0x5F))
-            Assert.fail()
-        } catch (exception: IllegalArgumentException) {
-            println(exception)
-        }
-    }
-
-    @Test
-    fun validateAnnotation_exception3() {
-        try {
-            validateAnnotation(byteArrayOf(0x5F, 0x80.toByte()))
-            Assert.fail()
-        } catch (exception: IllegalArgumentException) {
-            println(exception)
-        }
-    }
-
-    @Test
-    fun validateAnnotation_exception4() {
-        try {
-            validateAnnotation(byteArrayOf(0x5F, 0x71, 0x01))
-            Assert.fail()
-        } catch (exception: IllegalArgumentException) {
-            println(exception)
-        }
     }
 }

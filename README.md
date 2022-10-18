@@ -3,8 +3,8 @@ TLV-KSP
 
 [![CI](https://github.com/keiji/tlv-ksp/actions/workflows/ci.yml/badge.svg)](https://github.com/keiji/tlv-ksp/actions/workflows/ci.yml)
 
-TLV-KSP is a Kotlin library for encoding and decoding TLV(Tag-Length-Value) data.
-This library is now supported BER(Basic Encoding Rules) only.
+TLV-KSP is a Kotlin library for encoding and decoding TLV(Tag-Length-Value) data. This library is
+now supported BER(Basic Encoding Rules) and Compact format.
 
 ### Setup
 
@@ -12,12 +12,14 @@ To add TLV-KSP to your project, include the following in your app module build.g
 
 ```
 dependencies {
-    implementation("dev.keiji.tlv:tlv:0.2.3")
-    ksp("dev.keiji.tlv:tlv-ksp:0.2.3")
+    implementation("dev.keiji.tlv:tlv:0.3.0")
+    ksp("dev.keiji.tlv:tlv-ksp:0.3.0")
 }
 ```
 
 ### Usage
+
+#### BER-TLV
 
 ```kotlin
 @BerTlv
@@ -28,7 +30,8 @@ class PrimitiveDatum {
 }
 ```
 
-KSP will generate extend functions `writeTo(OutputStream)` and `readFrom(ByteArray)` to `PrimitiveDatum` class.
+KSP will generate extend functions `writeTo(OutputStream)` and `readFrom(ByteArray)`
+to `PrimitiveDatum` class.
 
 <details>
 <summary>PrimitiveDatumBerTlvEncoder</summary>
@@ -53,7 +56,7 @@ fun PrimitiveDatum.writeTo(outputStream: OutputStream) {
 fun PrimitiveDatum.readFrom(data: ByteArray) {
 
     BerTlvDecoder.readFrom(ByteArrayInputStream(data),
-        object : BerTlvDecoder.Companion.Callback {
+        object : BerTlvDecoder.Callback {
             override fun onLargeItemDetected(
                 tag: ByteArray,
                 length: BigInteger,
@@ -62,7 +65,7 @@ fun PrimitiveDatum.readFrom(data: ByteArray) {
                 throw StreamCorruptedException("tag length is too large.")
             }
 
-            private val nopConverter = dev.keiji.tlv.NopConverter()
+            private val dev_keiji_tlv_nopConverter = dev.keiji.tlv.NopConverter()
 
             override fun onItemDetected(tag: ByteArray, data: ByteArray) {
                 if (false) {
@@ -79,9 +82,66 @@ fun PrimitiveDatum.readFrom(data: ByteArray) {
     )
 }
 ```
+
 </details>
 
-#### TypeConverter
+#### Compact-TLV
+
+```kotlin
+@CompactTlv
+class CompactPrimitiveDatum {
+
+    @BerTlvItem(tag = 0x01)
+    var data: ByteArray? = null
+}
+```
+
+KSP will generate extend functions `writeTo(OutputStream)` and `readFrom(ByteArray)`
+to `CompactPrimitiveDatum` class.
+
+<details>
+<summary>PrimitiveDatumCompactTlvEncoder</summary>
+
+```
+fun PrimitiveDatum.writeTo(outputStream: OutputStream) {
+    val nopConverter = dev.keiji.tlv.NopConverter()
+
+    data?.also {
+        CompactTlvEncoder.writeTo(0x01.toByte(), nopConverter.convertToByteArray(it), outputStream)
+    }
+
+}
+```
+
+</details>
+
+<details>
+<summary>PrimitiveDatumCompactTlvDecoder</summary>
+
+```
+fun PrimitiveDatum.readFrom(data: ByteArray) {
+
+    CompactTlvDecoder.readFrom(ByteArrayInputStream(data),
+        object : CompactTlvDecoder.Callback {
+            private val dev_keiji_tlv_nopConverter = dev.keiji.tlv.NopConverter()
+
+            override fun onItemDetected(tag: ByteArray, data: ByteArray) {
+                if (false) {
+                    // Do nothing
+                } else if (0x01.toByte() == tag)) {
+                    this@readFrom.data = nopConverter.convertFromByteArray(data)
+                } else {
+                    // Do nothing
+                }
+            }
+        }
+    )
+}
+```
+
+</details>
+
+### TypeConverter
 
 ```
 private val CHARSET_ASCII = Charset.forName("ASCII")

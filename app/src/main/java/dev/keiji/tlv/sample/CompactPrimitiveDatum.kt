@@ -7,5 +7,8 @@ import dev.keiji.tlv.CompactTlvItem
 open class CompactPrimitiveDatum {
 
     @CompactTlvItem(tag = 0x01, order = 10)
-    var data: ByteArray? = null
+    var data1: ByteArray? = null
+
+    @CompactTlvItem(tag = 0x02, order = 5)
+    var data2: ByteArray? = null
 }

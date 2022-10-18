@@ -1,2 +1,4 @@
 dev.keiji.tlv.BerTlvDecoderProvider
 dev.keiji.tlv.BerTlvEncoderProvider
+dev.keiji.tlv.CompactTlvDecoderProvider
+dev.keiji.tlv.CompactTlvEncoderProvider

@@ -24,24 +24,24 @@ import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
 import java.lang.StringBuilder
 
-class BerTlvEncoderProcessor(
+class CompactTlvEncoderProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
 ) : SymbolProcessor {
-    private lateinit var berTlvClasses: Sequence<KSAnnotated>
+    private lateinit var compactTlvClasses: Sequence<KSAnnotated>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        berTlvClasses = resolver.getSymbolsWithAnnotation(BerTlv::class.qualifiedName!!)
-        val ret = berTlvClasses.filter { !it.validate() }.toList()
+        compactTlvClasses = resolver.getSymbolsWithAnnotation(CompactTlv::class.qualifiedName!!)
+        val ret = compactTlvClasses.filter { !it.validate() }.toList()
 
-        berTlvClasses
+        compactTlvClasses
             .filter { it is KSClassDeclaration && it.validate() }
-            .forEach { it.accept(BerTlvVisitor(), Unit) }
+            .forEach { it.accept(CompactTlvVisitor(), Unit) }
 
         return ret
     }
 
-    private inner class BerTlvVisitor : KSVisitorVoid() {
+    private inner class CompactTlvVisitor : KSVisitorVoid() {
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             super.visitClassDeclaration(classDeclaration, data)
@@ -52,7 +52,7 @@ class BerTlvEncoderProcessor(
                 .filter { it.validate() }
                 .filter { prop ->
                     prop.annotations.any { anno ->
-                        anno.shortName.asString() == BerTlvItem::class.simpleName
+                        anno.shortName.asString() == CompactTlvItem::class.simpleName
                     }
                 }
 
@@ -72,7 +72,7 @@ class BerTlvEncoderProcessor(
             annotatedProperties.forEach { prop ->
                 val className = prop.parent.toString()
                 val propertyName = prop.simpleName.asString()
-                val tagArray = getTagAsByteArray(prop, BerTlvItem::class)
+                val tagArray = getTagAsByteArray(prop, CompactTlvItem::class)
                 validateAnnotation(tagArray, className, propertyName, logger)
             }
         }
@@ -83,7 +83,7 @@ class BerTlvEncoderProcessor(
             logger: KSPLogger,
         ) {
             val packageName = classDeclaration.containingFile!!.packageName.asString()
-            val className = "${classDeclaration.simpleName.asString()}BerTlvEncoder"
+            val className = "${classDeclaration.simpleName.asString()}CompactTlvEncoder"
             val file = codeGenerator.createNewFile(
                 Dependencies(true, classDeclaration.containingFile!!),
                 packageName,
@@ -91,7 +91,7 @@ class BerTlvEncoderProcessor(
             )
 
             val imports = """
-import dev.keiji.tlv.BerTlvEncoder
+import dev.keiji.tlv.CompactTlvEncoder
 import java.io.*
         """.trimIndent()
 
@@ -121,7 +121,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
             val converterTable = HashMap<String, String>()
             val converters = annotatedProperties
-                .map { prop -> getQualifiedName(prop, BerTlvItem::class, logger) }
+                .map { prop -> getQualifiedName(prop, CompactTlvItem::class, logger) }
                 .distinct()
             converters.forEach { qualifiedName ->
                 val variableName = generateVariableName(qualifiedName)
@@ -133,24 +133,24 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             sb.append("\n")
 
             annotatedProperties.forEach { prop ->
-                val tag = getTagAsString(prop, BerTlvItem::class, logger)
-                val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
+                val tag = getTagAsString(prop, CompactTlvItem::class, logger)
+                val qualifiedName = getQualifiedName(prop, CompactTlvItem::class, logger)
                 val converterVariableName = converterTable[qualifiedName]
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
 
                 val decClass = prop.type.resolve().declaration
-                if (berTlvClasses.contains(decClass)) {
+                if (compactTlvClasses.contains(decClass)) {
                     sb.append("    ${propName}.also {\n")
                     sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
                     sb.append("            ${propName}.writeTo(baos)\n")
                     sb.append("            baos.toByteArray()\n")
                     sb.append("        }\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tag}), data, outputStream)\n")
+                    sb.append("        CompactTlvEncoder.writeTo(${tag}, data, outputStream)\n")
                     sb.append("    }\n")
                 } else {
                     sb.append("    ${propName}.also {\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tag}), ${converterVariableName}.convertToByteArray(it), outputStream)\n")
+                    sb.append("        CompactTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
                     sb.append("    }\n")
                 }
             }

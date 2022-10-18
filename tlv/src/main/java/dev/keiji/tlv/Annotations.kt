@@ -33,7 +33,7 @@ annotation class CompactTlv
 
 @Target(AnnotationTarget.FIELD)
 annotation class CompactTlvItem(
-    val tag: ByteArray,
+    val tag: Byte,
     val typeConverter: KClass<out AbsTypeConverter<*>> = NopConverter::class,
     val order: Int = 0
 )

@@ -24,6 +24,9 @@ import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
 import java.lang.StringBuilder
 
+private const val MAX_TAG_VALUE: Byte = 0b00001111
+private const val ZERO: Byte = 0
+
 class CompactTlvEncoderProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
@@ -72,8 +75,8 @@ class CompactTlvEncoderProcessor(
             annotatedProperties.forEach { prop ->
                 val className = prop.parent.toString()
                 val propertyName = prop.simpleName.asString()
-                val tagArray = getTagAsByteArray(prop, CompactTlvItem::class)
-                validateAnnotation(tagArray, className, propertyName, logger)
+                val tag = getTagAsByte(prop, CompactTlvItem::class)
+                validateAnnotation(tag, className, propertyName, logger)
             }
         }
 
@@ -156,6 +159,20 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             }
 
             return sb.toString()
+        }
+    }
+
+    companion object {
+        internal fun validateAnnotation(
+            tag: Byte,
+            className: String = "",
+            propertyName: String = "",
+            logger: KSPLogger? = null,
+        ) {
+            if (tag > MAX_TAG_VALUE || tag < ZERO) {
+                val lead = lead(className, propertyName)
+                throw IllegalArgumentException("$lead tag ${tag.toHex()} must be less or equals ${MAX_TAG_VALUE.toHex()}.")
+            }
         }
     }
 }

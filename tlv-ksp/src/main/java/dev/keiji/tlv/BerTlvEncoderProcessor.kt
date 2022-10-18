@@ -24,6 +24,9 @@ import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
 import java.lang.StringBuilder
 
+private const val MASK_MSB_BITS = 0b100_00000
+private const val MASK_TAG_BITS = 0b00_0_11111
+
 class BerTlvEncoderProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
@@ -133,7 +136,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             sb.append("\n")
 
             annotatedProperties.forEach { prop ->
-                val tag = getTagAsString(prop, BerTlvItem::class, logger)
+                val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
                 val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
                 val converterVariableName = converterTable[qualifiedName]
                 val propName =
@@ -146,16 +149,71 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                     sb.append("            ${propName}.writeTo(baos)\n")
                     sb.append("            baos.toByteArray()\n")
                     sb.append("        }\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tag}), data, outputStream)\n")
+                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), data, outputStream)\n")
                     sb.append("    }\n")
                 } else {
                     sb.append("    ${propName}.also {\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tag}), ${converterVariableName}.convertToByteArray(it), outputStream)\n")
+                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), ${converterVariableName}.convertToByteArray(it), outputStream)\n")
                     sb.append("    }\n")
                 }
             }
 
             return sb.toString()
+        }
+    }
+
+    companion object {
+        internal fun validateAnnotation(
+            tag: ByteArray,
+            className: String = "",
+            propertyName: String = "",
+            logger: KSPLogger? = null,
+        ) {
+            val firstByte: Int = tag.first().toInt() and 0xFF
+
+            if ((firstByte and MASK_TAG_BITS) != MASK_TAG_BITS && tag.size > 1) {
+                val lead = lead(className, propertyName)
+                throw IllegalArgumentException(
+                    "$lead tag ${tag.toHex(":")} seems to short(1 byte) definition." +
+                            " However, it seems to long definition expectedly."
+                )
+            } else if ((firstByte and MASK_TAG_BITS) == MASK_TAG_BITS && tag.size < 2) {
+                val lead = lead(className, propertyName)
+                throw IllegalArgumentException(
+                    "$lead tag ${tag.toHex(":")} seems to long(n bytes) definition." +
+                            " However, it seems to short definition expectedly."
+                )
+            }
+
+            tag.forEachIndexed { index, b ->
+                // Skip index 0
+                if (index == 0) {
+                    return@forEachIndexed
+                }
+
+                val value = b.toInt() and 0xFF
+
+                // Check lastIndex(= tag.size - 1)
+                if (index == (tag.size - 1)) {
+                    if ((value and MASK_MSB_BITS) == MASK_MSB_BITS) {
+                        val lead = lead(className, propertyName)
+                        throw IllegalArgumentException(
+                            "$lead tag ${tag.toHex(":")} seems to be long(n bytes) definition." +
+                                    " last element ${tag[index].toHex()} seems to be continued."
+                        )
+                    }
+                    return@forEachIndexed
+                }
+
+                // index 1 to (lastIndex - 1)
+                if ((value and MASK_MSB_BITS) != MASK_MSB_BITS) {
+                    val lead = lead(className, propertyName)
+                    throw IllegalArgumentException(
+                        "$lead tag ${tag.toHex(":")} seems to be long(n bytes) definition." +
+                                " index $index element ${tag[index].toHex()} MSB must be true."
+                    )
+                }
+            }
         }
     }
 }

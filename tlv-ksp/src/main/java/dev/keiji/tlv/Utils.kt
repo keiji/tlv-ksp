@@ -107,10 +107,7 @@ internal fun compare(byteArray1: ByteArray, byteArray2: ByteArray): Int {
     return result
 }
 
-private const val MASK_MSB_BITS = 0b100_00000
-private const val MASK_TAG_BITS = 0b00_0_11111
-
-private fun lead(
+internal fun lead(
     className: String,
     propertyName: String
 ): String {
@@ -118,59 +115,6 @@ private fun lead(
         "Class $className property $propertyName"
     } else {
         ""
-    }
-}
-
-internal fun validateAnnotation(
-    tag: ByteArray,
-    className: String = "",
-    propertyName: String = "",
-    logger: KSPLogger? = null,
-) {
-    val firstByte: Int = tag.first().toInt() and 0xFF
-
-    if ((firstByte and MASK_TAG_BITS) != MASK_TAG_BITS && tag.size > 1) {
-        val lead = lead(className, propertyName)
-        throw IllegalArgumentException(
-            "$lead tag ${tag.toHex(":")} seems to short(1 byte) definition." +
-                    " However, it seems to long definition expectedly."
-        )
-    } else if ((firstByte and MASK_TAG_BITS) == MASK_TAG_BITS && tag.size < 2) {
-        val lead = lead(className, propertyName)
-        throw IllegalArgumentException(
-            "$lead tag ${tag.toHex(":")} seems to long(n bytes) definition." +
-                    " However, it seems to short definition expectedly."
-        )
-    }
-
-    tag.forEachIndexed { index, b ->
-        // Skip index 0
-        if (index == 0) {
-            return@forEachIndexed
-        }
-
-        val value = b.toInt() and 0xFF
-
-        // Check lastIndex(= tag.size - 1)
-        if (index == (tag.size - 1)) {
-            if ((value and MASK_MSB_BITS) == MASK_MSB_BITS) {
-                val lead = lead(className, propertyName)
-                throw IllegalArgumentException(
-                    "$lead tag ${tag.toHex(":")} seems to be long(n bytes) definition." +
-                            " last element ${tag[index].toHex()} seems to be continued."
-                )
-            }
-            return@forEachIndexed
-        }
-
-        // index 1 to (lastIndex - 1)
-        if ((value and MASK_MSB_BITS) != MASK_MSB_BITS) {
-            val lead = lead(className, propertyName)
-            throw IllegalArgumentException(
-                "$lead tag ${tag.toHex(":")} seems to be long(n bytes) definition." +
-                        " index $index element ${tag[index].toHex()} MSB must be true."
-            )
-        }
     }
 }
 
@@ -209,13 +153,47 @@ internal fun getTagAsByteArray(
     return tagAsByteList.toByteArray()
 }
 
-internal fun getTagAsString(
+internal fun getTagAsByte(
+    prop: KSPropertyDeclaration,
+    annotationClass: KClass<*>,
+): Byte {
+    val fileName = prop.qualifiedName!!.asString()
+
+    val item = prop.annotations
+        .filter { it.validate() }
+        .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
+    item
+        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
+
+    val argument = item.arguments
+        .filter { it.validate() }
+        .firstOrNull { it.name!!.asString() == "tag" }
+    argument
+        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` must be exist.")
+
+    val argumentValue = argument.value
+    if (argumentValue !is Byte) {
+        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` value must be instance of Int. ${argumentValue?.javaClass?.simpleName}")
+    }
+
+    return argumentValue
+}
+
+internal fun getTagArrayAsString(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
     logger: KSPLogger,
 ): String {
     return getTagAsByteArray(prop, annotationClass)
         .joinToString(", ") { "0x${it.toHex()}.toByte()" }
+}
+
+internal fun getTagAsString(
+    prop: KSPropertyDeclaration,
+    annotationClass: KClass<*>,
+    logger: KSPLogger,
+): String {
+    return "0x${getTagAsByte(prop, annotationClass).toHex()}.toByte()"
 }
 
 internal fun getQualifiedName(

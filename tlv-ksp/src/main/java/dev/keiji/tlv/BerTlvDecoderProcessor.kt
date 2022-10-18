@@ -145,10 +145,10 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
         sb.append("                    // Do nothing\n")
 
         annotatedProperties.forEach { prop ->
-            val tag = getTagAsString(prop, BerTlvItem::class, logger)
+            val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
             val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
             val converterVariableName = converterTable[qualifiedName]
-            sb.append("                } else if (byteArrayOf(${tag}).contentEquals(tag)) {\n")
+            sb.append("                } else if (byteArrayOf(${tagArray}).contentEquals(tag)) {\n")
 
             val decClass = prop.type.resolve().declaration
             if (berTlvClasses.contains(decClass)) {

@@ -77,13 +77,22 @@ import dev.keiji.tlv.CompactTlvDecoder
 import java.io.*
         """.trimIndent()
 
+        val classTemplate0 = """
+fun ${classDeclaration.simpleName.asString()}.readFrom(
+    byteArray: ByteArray,
+    postCallback: CompactTlvDecoder.Callback? = null,
+) {
+    readFrom(ByteArrayInputStream(byteArray), postCallback)
+}
+        """.trimIndent()
+
         val classTemplate1 = """
 fun ${classDeclaration.simpleName.asString()}.readFrom(
-    data: ByteArray,
+    inputStream: InputStream,
     postCallback: CompactTlvDecoder.Callback? = null,
 ) {
 
-    CompactTlvDecoder.readFrom(ByteArrayInputStream(data),
+    CompactTlvDecoder.readFrom(inputStream,
         object : CompactTlvDecoder.Callback {
         """.trimIndent()
 
@@ -98,6 +107,8 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
         file.appendText("package $packageName")
             .appendText("")
             .appendText(imports)
+            .appendText("")
+            .appendText(classTemplate0)
             .appendText("")
             .appendText(classTemplate1)
             .appendText("")

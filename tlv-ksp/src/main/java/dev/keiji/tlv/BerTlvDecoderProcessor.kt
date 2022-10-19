@@ -78,13 +78,22 @@ import java.io.*
 import java.math.BigInteger
         """.trimIndent()
 
+        val classTemplate0 = """
+fun ${classDeclaration.simpleName.asString()}.readFrom(
+    byteArray: ByteArray,
+    postCallback: BerTlvDecoder.Callback? = null,
+) {
+    readFrom(ByteArrayInputStream(byteArray), postCallback)
+}
+        """.trimIndent()
+
         val classTemplate1 = """
 fun ${classDeclaration.simpleName.asString()}.readFrom(
-    data: ByteArray,
+    inputStream: InputStream,
     postCallback: BerTlvDecoder.Callback? = null,
 ) {
 
-    BerTlvDecoder.readFrom(ByteArrayInputStream(data),
+    BerTlvDecoder.readFrom(inputStream,
         object : BerTlvDecoder.Callback {
             override fun onLargeItemDetected(
                 tag: ByteArray,
@@ -113,6 +122,8 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
         file.appendText("package $packageName")
             .appendText("")
             .appendText(imports)
+            .appendText("")
+            .appendText(classTemplate0)
             .appendText("")
             .appendText(classTemplate1)
             .appendText("")

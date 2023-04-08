@@ -2,10 +2,10 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="1.7">
-      <module name="TlvKsp.app" target="11" />
-      <module name="TlvKsp.tlv-ksp" target="11" />
-      <module name="TlvKsp.tlv-ksp.main" target="11" />
-      <module name="TlvKsp.tlv-ksp.test" target="11" />
+      <module name="TlvKsp.app" target="17" />
+      <module name="TlvKsp.tlv-ksp" target="17" />
+      <module name="TlvKsp.tlv-ksp.main" target="17" />
+      <module name="TlvKsp.tlv-ksp.test" target="17" />
     </bytecodeTargetLevel>
   </component>
 </project>

@@ -78,6 +78,37 @@ class BerTlvDecoderTest {
         assertEquals(expected, actual)
     }
 
+
+    @Test
+    fun readLengthBytes1() {
+        val data = byteArrayOf(0b0_0000001)
+        val inputStream = ByteArrayInputStream(data)
+        val expected = byteArrayOf(0x1)
+
+        val actual = BerTlvDecoder.readLengthBytes(inputStream)
+        assertArrayEquals(expected, actual)
+    }
+
+    @Test
+    fun readLengthBytes2() {
+        val data = byteArrayOf(0b1_0000001.toByte(), 127)
+        val inputStream = ByteArrayInputStream(data)
+        val expected = byteArrayOf(127)
+
+        val actual = BerTlvDecoder.readLengthBytes(inputStream)
+        assertArrayEquals(expected, actual)
+    }
+
+    @Test
+    fun readLengthBytes3() {
+        val data = byteArrayOf(0b1_0000010.toByte(), 0b11111111.toByte(), 0x00000001, 0, 1, 2)
+        val inputStream = ByteArrayInputStream(data)
+        val expected = byteArrayOf(0b11111111.toByte(), 0x00000001)
+
+        val actual = BerTlvDecoder.readLengthBytes(inputStream)
+        assertArrayEquals(expected, actual)
+    }
+
     @Test
     fun readLength4_exception() {
         val data = rand.nextBytes(128)

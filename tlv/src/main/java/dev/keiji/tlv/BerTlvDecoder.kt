@@ -118,7 +118,7 @@ class BerTlvDecoder {
             }
         }
 
-        fun readLength(inputStream: InputStream): BigInteger? {
+        fun readLengthBytes(inputStream: InputStream): ByteArray? {
             val b = inputStream.read()
             if (b < 0) {
                 throw StreamCorruptedException()
@@ -132,7 +132,7 @@ class BerTlvDecoder {
             val longDef = b and MASK_MSB_BITS != 0
 
             if (!longDef) {
-                return BigInteger.valueOf(b.toLong())
+                return byteArrayOf(b.toByte())
             } else {
                 val fieldLength = b xor MASK_MSB_BITS
                 if (fieldLength > MAX_LENGTH_FILED_LENGTH) {
@@ -152,8 +152,13 @@ class BerTlvDecoder {
                         break
                     }
                 }
-                return BigInteger(+1, lengthBytes)
+                return lengthBytes
             }
+        }
+
+        fun readLength(inputStream: InputStream): BigInteger? {
+            val lengthBytes = readLengthBytes(inputStream) ?: return null
+            return BigInteger(+1, lengthBytes)
         }
     }
 

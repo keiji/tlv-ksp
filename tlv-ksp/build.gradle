@@ -1,6 +1,6 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm'
-    id "com.google.devtools.ksp" version "1.7.10-1.0.6"
+    id "com.google.devtools.ksp" version "1.8.20-1.0.10"
     id 'maven-publish'
     id 'signing'
 }
@@ -9,7 +9,7 @@ dependencies {
 //    implementation("dev.keiji.tlv:tlv:${rootProject.ext.versionCode}")
     implementation project(path: ':tlv')
 
-    implementation "com.google.devtools.ksp:symbol-processing-api:1.7.10-1.0.6"
+    implementation "com.google.devtools.ksp:symbol-processing-api:1.8.20-1.0.10"
 
     testImplementation 'junit:junit:4.13.2'
 }

@@ -48,7 +48,7 @@ class BerTlvDecoder {
             callback: Callback,
         ) {
             while (true) {
-                val tag = readTag(inputStream)
+                val tag = readTagFieldBytes(inputStream)
                 tag ?: break
 
                 val length = readLength(inputStream)
@@ -64,7 +64,7 @@ class BerTlvDecoder {
 
                 val isLargeItem = length.bitLength() > (Integer.SIZE - 1)
                 if (!isLargeItem) {
-                    val value = readValue(inputStream, length)
+                    val value = readValueFieldBytes(inputStream, length)
                     callback.onItemDetected(tag, value)
                 } else {
                     callback.onLargeItemDetected(tag, length, inputStream)
@@ -72,7 +72,7 @@ class BerTlvDecoder {
             }
         }
 
-        fun readValue(
+        fun readValueFieldBytes(
             inputStream: InputStream,
             length: BigInteger,
         ): ByteArray {
@@ -92,7 +92,7 @@ class BerTlvDecoder {
             }
         }
 
-        fun readTag(inputStream: InputStream): ByteArray? {
+        fun readTagFieldBytes(inputStream: InputStream): ByteArray? {
             val tagStream = ByteArrayOutputStream()
 
             while (true) {
@@ -118,7 +118,7 @@ class BerTlvDecoder {
             }
         }
 
-        fun readLengthBytes(inputStream: InputStream): ByteArray? {
+        fun readLengthFieldBytes(inputStream: InputStream): ByteArray? {
             val b = inputStream.read()
             if (b < 0) {
                 throw StreamCorruptedException()
@@ -133,32 +133,42 @@ class BerTlvDecoder {
 
             if (!longDef) {
                 return byteArrayOf(b.toByte())
-            } else {
-                val fieldLength = b xor MASK_MSB_BITS
-                if (fieldLength > MAX_LENGTH_FILED_LENGTH) {
-                    throw InvalidObjectException("Long Definite length must not be grater 126 bytes.")
-                }
-
-                val lengthBytes = ByteArray(fieldLength)
-                var offset = 0
-
-                while (true) {
-                    val readLength = inputStream.read(lengthBytes, offset, (fieldLength - offset))
-                    if (readLength < 0) {
-                        throw StreamCorruptedException()
-                    } else if (readLength < (fieldLength - offset)) {
-                        offset += readLength
-                    } else {
-                        break
-                    }
-                }
-                return lengthBytes
             }
+
+            val fieldLength = b xor MASK_MSB_BITS
+            if (fieldLength > MAX_LENGTH_FILED_LENGTH) {
+                throw InvalidObjectException("Long Definite length must not be grater 126 bytes.")
+            }
+
+            val lengthFieldSize = 1 + fieldLength
+            val lengthFieldBytes = ByteArray(lengthFieldSize).also {
+                it[0] = b.toByte()
+            }
+
+            var offset = 1
+            while (true) {
+                val readLength =
+                    inputStream.read(lengthFieldBytes, offset, (lengthFieldSize - offset))
+                if (readLength < 0) {
+                    throw StreamCorruptedException()
+                } else if (readLength < (fieldLength - offset)) {
+                    offset += readLength
+                } else {
+                    break
+                }
+            }
+            return lengthFieldBytes
         }
 
         fun readLength(inputStream: InputStream): BigInteger? {
-            val lengthBytes = readLengthBytes(inputStream) ?: return null
-            return BigInteger(+1, lengthBytes)
+            val lengthBytes = readLengthFieldBytes(inputStream) ?: return null
+            val lengthFieldSize = lengthBytes.size
+
+            return if (lengthFieldSize <= 1) {
+                BigInteger(+1, lengthBytes)
+            } else {
+                BigInteger(+1, lengthBytes.copyOfRange(1, lengthFieldSize))
+            }
         }
     }
 

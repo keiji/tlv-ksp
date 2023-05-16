@@ -6,7 +6,6 @@ plugins {
 }
 
 dependencies {
-//    implementation("dev.keiji.tlv:tlv:${rootProject.ext.versionCode}")
     implementation project(path: ':tlv')
 
     implementation "com.google.devtools.ksp:symbol-processing-api:1.8.20-1.0.10"

@@ -19,7 +19,7 @@ class BerTlvDecoderTest {
         val inputStream = ByteArrayInputStream(data)
         val expected = byteArrayOf(0x4F)
 
-        val actual = BerTlvDecoder.readTag(inputStream)
+        val actual = BerTlvDecoder.readTagFieldBytes(inputStream)
         assertArrayEquals(expected, actual)
     }
 
@@ -31,7 +31,7 @@ class BerTlvDecoderTest {
         val inputStream = ByteArrayInputStream(data)
         val expected = byteArrayOf(0x7F, 0x74)
 
-        val actual = BerTlvDecoder.readTag(inputStream)
+        val actual = BerTlvDecoder.readTagFieldBytes(inputStream)
         assertArrayEquals(expected, actual)
     }
 
@@ -44,7 +44,7 @@ class BerTlvDecoderTest {
         val inputStream = ByteArrayInputStream(data)
         val expected = byteArrayOf(0x7F, 0x84.toByte(), 0x74)
 
-        val actual = BerTlvDecoder.readTag(inputStream)
+        val actual = BerTlvDecoder.readTagFieldBytes(inputStream)
         assertArrayEquals(expected, actual)
     }
 
@@ -85,7 +85,7 @@ class BerTlvDecoderTest {
         val inputStream = ByteArrayInputStream(data)
         val expected = byteArrayOf(0x1)
 
-        val actual = BerTlvDecoder.readLengthBytes(inputStream)
+        val actual = BerTlvDecoder.readLengthFieldBytes(inputStream)
         assertArrayEquals(expected, actual)
     }
 
@@ -93,9 +93,9 @@ class BerTlvDecoderTest {
     fun readLengthBytes2() {
         val data = byteArrayOf(0b1_0000001.toByte(), 127)
         val inputStream = ByteArrayInputStream(data)
-        val expected = byteArrayOf(127)
+        val expected = byteArrayOf(0b1_0000001.toByte(), 127)
 
-        val actual = BerTlvDecoder.readLengthBytes(inputStream)
+        val actual = BerTlvDecoder.readLengthFieldBytes(inputStream)
         assertArrayEquals(expected, actual)
     }
 
@@ -103,9 +103,9 @@ class BerTlvDecoderTest {
     fun readLengthBytes3() {
         val data = byteArrayOf(0b1_0000010.toByte(), 0b11111111.toByte(), 0x00000001, 0, 1, 2)
         val inputStream = ByteArrayInputStream(data)
-        val expected = byteArrayOf(0b11111111.toByte(), 0x00000001)
+        val expected = byteArrayOf(0b1_0000010.toByte(), 0b11111111.toByte(), 0x00000001)
 
-        val actual = BerTlvDecoder.readLengthBytes(inputStream)
+        val actual = BerTlvDecoder.readLengthFieldBytes(inputStream)
         assertArrayEquals(expected, actual)
     }
 

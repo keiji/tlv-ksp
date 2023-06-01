@@ -18,6 +18,7 @@ package dev.keiji.tlv
 
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.lang.Math.max
 import java.math.BigInteger
 
 /**
@@ -55,24 +56,40 @@ class BerTlvEncoder {
         fun writeTo(
             tag: ByteArray,
             value: ByteArray?,
-            os: OutputStream
+            os: OutputStream,
+            longDefLengthFieldSizeAtLeast: Int = 0,
         ) {
             value ?: return
 
             os.write(tag)
-            os.write(convertToLength(value))
+            os.write(convertToLength(value, longDefLengthFieldSizeAtLeast))
             os.write(value)
         }
 
-        fun convertToLength(array: ByteArray): ByteArray {
-            return convertToLength(array.size)
+        fun convertToLength(
+            array: ByteArray,
+            longDefLengthFieldSizeAtLeast: Int = 0,
+        ): ByteArray {
+            return convertToLength(
+                array.size,
+                longDefLengthFieldSizeAtLeast,
+            )
         }
 
-        fun convertToLength(value: Int): ByteArray {
-            return convertToLength(BigInteger.valueOf(value.toLong()))
+        fun convertToLength(
+            value: Int,
+            longDefLengthFieldSizeAtLeast: Int = 0,
+        ): ByteArray {
+            return convertToLength(
+                BigInteger.valueOf(value.toLong()),
+                longDefLengthFieldSizeAtLeast,
+            )
         }
 
-        fun convertToLength(size: BigInteger): ByteArray {
+        fun convertToLength(
+            size: BigInteger,
+            longDefLengthFieldSizeAtLeast: Int = 0,
+        ): ByteArray {
             if (size.compareTo(BigInteger.ZERO) == -1) {
                 throw IllegalArgumentException("size must not be less than 0.")
             }
@@ -93,8 +110,11 @@ class BerTlvEncoder {
                 var bitLength = size.bitLength()
                 bitLength += if (bitLength % 8 == 0) 0 else 1
 
-                val sizeBits = 0b10000000 or (bitLength / Byte.SIZE_BITS) +
+                val longLengthFieldBytesSize = (bitLength / Byte.SIZE_BITS) +
                         if ((bitLength % Byte.SIZE_BITS) != 0) 1 else 0
+
+                val lengthSize = max(longLengthFieldBytesSize, longDefLengthFieldSizeAtLeast)
+                val sizeBits = 0b10000000 or lengthSize
 
                 val sizeBytes = size.toByteArray()
 
@@ -102,8 +122,16 @@ class BerTlvEncoder {
                 // Here is trim needless 0x00.
                 val offset = if (sizeBytes[0] == 0x00.toByte()) 1 else 0
 
+                val lengthBytes = ByteArray(lengthSize)
+                sizeBytes.copyInto(
+                    lengthBytes,
+                    destinationOffset = lengthSize - longLengthFieldBytesSize,
+                    startIndex = offset,
+                    endIndex = sizeBytes.size,
+                )
+
                 baos.write(sizeBits)
-                baos.write(sizeBytes, offset, (sizeBytes.size - offset))
+                baos.write(lengthBytes)
                 baos.toByteArray()
             }
         }

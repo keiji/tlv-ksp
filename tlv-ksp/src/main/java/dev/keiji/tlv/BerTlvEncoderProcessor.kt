@@ -150,6 +150,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             annotatedProperties.forEach { prop ->
                 val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
                 val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
+                val longDefLengthFieldSizeAtLeast = getLongDefLengthFieldSizeAtLeast(prop, BerTlvItem::class, logger)
                 val converterVariableName = converterTable[qualifiedName]
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
@@ -161,11 +162,11 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                     sb.append("            ${propName}.writeTo(baos)\n")
                     sb.append("            baos.toByteArray()\n")
                     sb.append("        }\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), data, outputStream)\n")
+                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), data, outputStream, longDefLengthFieldSizeAtLeast = ${longDefLengthFieldSizeAtLeast})\n")
                     sb.append("    }\n")
                 } else {
                     sb.append("    ${propName}.also {\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), ${converterVariableName}.convertToByteArray(it), outputStream)\n")
+                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), ${converterVariableName}.convertToByteArray(it), outputStream, longDefLengthFieldSizeAtLeast = ${longDefLengthFieldSizeAtLeast})\n")
                     sb.append("    }\n")
                 }
             }

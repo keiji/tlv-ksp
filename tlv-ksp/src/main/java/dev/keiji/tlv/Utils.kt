@@ -187,6 +187,33 @@ internal fun getTagAsString(
     return "0x${getTagAsByte(prop, annotationClass).toHex()}.toByte()"
 }
 
+internal fun getLongDefLengthFieldSizeAtLeast(
+    prop: KSPropertyDeclaration,
+    annotationClass: KClass<*>,
+    logger: KSPLogger,
+): Int {
+    val fileName = prop.qualifiedName!!.asString()
+
+    val item = prop.annotations
+        .filter { it.validate() }
+        .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
+    item
+        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
+
+    val argument = item.arguments
+        .filter { it.validate() }
+        .firstOrNull { it.name!!.asString() == "longDefLengthFieldSizeAtLeast" }
+    argument
+        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `longDefLengthFieldSizeAtLeast` must be exist.")
+
+    val argumentValue = argument.value
+    if (argumentValue !is Int) {
+        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `longDefLengthFieldSizeAtLeast` value must be instance of Int.")
+    }
+
+    return argumentValue
+}
+
 internal fun getQualifiedName(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,

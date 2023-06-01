@@ -25,6 +25,7 @@ annotation class BerTlv
 annotation class BerTlvItem(
     val tag: ByteArray,
     val typeConverter: KClass<out AbsTypeConverter<*>> = NopConverter::class,
+    val longDefLengthFieldSizeAtLeast: Int = 0,
     val order: Int = 0
 )
 

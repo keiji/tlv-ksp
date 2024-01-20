@@ -1,18 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.devtools.ksp' version '1.8.20-1.0.10'
+    id 'com.google.devtools.ksp' version '1.9.22-1.0.17'
 }
 
 android {
     namespace 'dev.keiji.tlv.sample'
 
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "dev.keiji.tlv.sample"
         minSdk 16
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -46,9 +46,9 @@ dependencies {
     implementation project(path: ':tlv')
     ksp project(path: ':tlv-ksp')
 
-    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     testImplementation 'junit:junit:4.13.2'

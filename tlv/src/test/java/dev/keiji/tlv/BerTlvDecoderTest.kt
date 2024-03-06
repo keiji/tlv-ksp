@@ -1,6 +1,9 @@
 package dev.keiji.tlv
 
-import org.junit.Assert.*
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -138,7 +141,7 @@ class BerTlvDecoderTest {
             override fun onUnknownLengthItemDetected(tag: ByteArray, inputStream: InputStream) {
                 assertArrayEquals(
                     expected,
-                    inputStream.readAllBytes()
+                    inputStream.readBytes()
                 )
                 onUndefinedLengthItemDetectedFlag = true
             }

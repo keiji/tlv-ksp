@@ -22,6 +22,7 @@ import java.io.StreamCorruptedException
 /**
  * Compact-TLV Decoder.
  */
+@Suppress("MagicNumber")
 class CompactTlvDecoder {
 
     companion object {

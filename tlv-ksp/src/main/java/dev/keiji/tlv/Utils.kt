@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("TooManyFunctions")
+
 package dev.keiji.tlv
 
 import com.google.devtools.ksp.processing.KSPLogger
@@ -40,18 +42,18 @@ internal fun getOrder(
     val item = prop.annotations
         .filter { it.validate() }
         .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
-    item
-        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
+    requireNotNull(item) { "${annotationClass.simpleName} annotation must be exist." }
 
     val argument = item.arguments
         .filter { it.validate() }
         .firstOrNull { it.name!!.asString() == "order" }
-    argument
-        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `order` must be exist.")
+    requireNotNull(argument) {
+        "$fileName ${annotationClass.simpleName} annotation argument `order` must be exist."
+    }
 
     val argumentValue = argument.value
-    if (argumentValue !is Int) {
-        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `order` value must be instance of Int.")
+    require(argumentValue is Int) {
+        "$fileName ${annotationClass.simpleName} annotation argument `order` value must be instance of Int."
     }
 
     return argumentValue
@@ -69,6 +71,7 @@ internal val annotatedPropertyTagComparator =
         return@Comparator compare(obj1Tag, obj2Tag)
     }
 
+@Suppress("MagicNumber")
 internal fun compare(byteArray1: ByteArray, byteArray2: ByteArray): Int {
     if (byteArray1 === byteArray2) {
         return 0
@@ -118,24 +121,24 @@ internal fun getTagAsByteArray(
     val item = prop.annotations
         .filter { it.validate() }
         .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
-    item
-        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
+    requireNotNull(item) { "${annotationClass.simpleName} annotation must be exist." }
 
     val argument = item.arguments
         .filter { it.validate() }
         .firstOrNull { it.name!!.asString() == "tag" }
-    argument
-        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` must be exist.")
+    requireNotNull(argument) {
+        "$fileName ${annotationClass.simpleName} annotation argument `tag` must be exist."
+    }
 
     val argumentValue = argument.value
-    if (argumentValue !is List<*>) {
-        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` value must be instance of List.")
+    require(argumentValue is List<*>) {
+        "$fileName ${annotationClass.simpleName} annotation argument `tag` value must be instance of List."
     }
-    if (argumentValue.isEmpty()) {
-        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` list must not be empty.")
+    require(argumentValue.isNotEmpty()) {
+        "$fileName ${annotationClass.simpleName} annotation argument `tag` list must not be empty."
     }
-    if (argumentValue.first() !is Byte) {
-        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` type must be List<Byte>.")
+    require(argumentValue.first() is Byte) {
+        "$fileName ${annotationClass.simpleName} annotation argument `tag` type must be List<Byte>."
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -153,23 +156,25 @@ internal fun getTagAsByte(
     val item = prop.annotations
         .filter { it.validate() }
         .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
-    item
-        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
+    requireNotNull(item) { "${annotationClass.simpleName} annotation must be exist." }
 
     val argument = item.arguments
         .filter { it.validate() }
         .firstOrNull { it.name!!.asString() == "tag" }
-    argument
-        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` must be exist.")
+    requireNotNull(argument) {
+        "$fileName ${annotationClass.simpleName} annotation argument `tag` must be exist."
+    }
 
     val argumentValue = argument.value
-    if (argumentValue !is Byte) {
-        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `tag` value must be instance of Int. ${argumentValue?.javaClass?.simpleName}")
+    require(argumentValue is Byte) {
+        "$fileName ${annotationClass.simpleName} annotation argument `tag` value" +
+                " must be instance of Int. ${argumentValue?.javaClass?.simpleName}"
     }
 
     return argumentValue
 }
 
+@Suppress("UnusedParameter")
 internal fun getTagArrayAsString(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
@@ -179,6 +184,7 @@ internal fun getTagArrayAsString(
         .joinToString(", ") { "0x${it.toHex()}.toByte()" }
 }
 
+@Suppress("UnusedParameter")
 internal fun getTagAsString(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
@@ -187,6 +193,7 @@ internal fun getTagAsString(
     return "0x${getTagAsByte(prop, annotationClass).toHex()}.toByte()"
 }
 
+@Suppress("UnusedParameter")
 internal fun getLongDefLengthFieldSizeAtLeast(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
@@ -197,23 +204,26 @@ internal fun getLongDefLengthFieldSizeAtLeast(
     val item = prop.annotations
         .filter { it.validate() }
         .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
-    item
-        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
+    requireNotNull(item) { "${annotationClass.simpleName} annotation must be exist." }
 
     val argument = item.arguments
         .filter { it.validate() }
         .firstOrNull { it.name!!.asString() == "longDefLengthFieldSizeAtLeast" }
-    argument
-        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `longDefLengthFieldSizeAtLeast` must be exist.")
+    requireNotNull(argument) {
+        "$fileName ${annotationClass.simpleName} annotation argument" +
+                " `longDefLengthFieldSizeAtLeast` must be exist."
+    }
 
     val argumentValue = argument.value
-    if (argumentValue !is Int) {
-        throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `longDefLengthFieldSizeAtLeast` value must be instance of Int.")
+    require(argumentValue is Int) {
+        "$fileName ${annotationClass.simpleName} annotation argument" +
+                " `longDefLengthFieldSizeAtLeast` value must be instance of Int."
     }
 
     return argumentValue
 }
 
+@Suppress("UnusedParameter")
 internal fun getQualifiedName(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
@@ -224,14 +234,14 @@ internal fun getQualifiedName(
     val item = prop.annotations
         .filter { it.validate() }
         .firstOrNull { it.shortName.asString() == annotationClass.simpleName }
-    item
-        ?: throw IllegalArgumentException("${annotationClass.simpleName} annotation must be exist.")
+    requireNotNull(item) { "${annotationClass.simpleName} annotation must be exist." }
 
     val argument = item.arguments
         .filter { it.validate() }
         .firstOrNull { it.name!!.asString() == "typeConverter" }
-    argument
-        ?: throw IllegalArgumentException("$fileName ${annotationClass.simpleName} annotation argument `typeConverter` must be exist.")
+    requireNotNull(argument) {
+        "$fileName ${annotationClass.simpleName} annotation argument `typeConverter` must be exist."
+    }
 
     val argumentValue = argument.value as KSType
 

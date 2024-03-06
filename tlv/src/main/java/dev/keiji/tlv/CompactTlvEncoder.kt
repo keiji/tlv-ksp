@@ -21,53 +21,52 @@ import java.io.OutputStream
 /**
  * Compact-TLV Encoder.
  */
-class CompactTlvEncoder {
-    companion object {
-        private const val MAX_LENGTH = 0b00010000
+@Suppress("MagicNumber")
+object CompactTlvEncoder {
+    private const val MAX_LENGTH = 0b00010000
 
-        /**
-         * Write a TLV-item to OutputStream.
-         *
-         * @param tag
-         * @param length
-         * @param value
-         * @param os
-         */
-        fun writeTo(
-            tag: Byte,
-            length: Int,
-            value: ByteArray,
-            os: OutputStream
-        ) {
-            if (tag > MAX_LENGTH && tag < 0) {
-                return
-            }
-            if (length > MAX_LENGTH && length < 0) {
-                return
-            }
-            val tagAndLength = packTagAndLength(tag, length)
-            os.write(byteArrayOf(tagAndLength))
-            os.write(value)
+    /**
+     * Write a TLV-item to OutputStream.
+     *
+     * @param tag
+     * @param length
+     * @param value
+     * @param os
+     */
+    fun writeTo(
+        tag: Byte,
+        length: Int,
+        value: ByteArray,
+        os: OutputStream
+    ) {
+        if (tag > MAX_LENGTH && tag < 0) {
+            return
         }
-
-        fun packTagAndLength(tag: Byte, length: Int): Byte =
-            ((tag.toInt() shl 4) or length).toByte()
-
-        /**
-         * Write a TLV-item to OutputStream.
-         *
-         * @param tag
-         * @param value
-         * @param os
-         */
-        fun writeTo(
-            tag: Byte,
-            value: ByteArray?,
-            os: OutputStream
-        ) {
-            value ?: return
-
-            writeTo(tag, value.size, value, os)
+        if (length > MAX_LENGTH && length < 0) {
+            return
         }
+        val tagAndLength = packTagAndLength(tag, length)
+        os.write(byteArrayOf(tagAndLength))
+        os.write(value)
+    }
+
+    fun packTagAndLength(tag: Byte, length: Int): Byte =
+        ((tag.toInt() shl 4) or length).toByte()
+
+    /**
+     * Write a TLV-item to OutputStream.
+     *
+     * @param tag
+     * @param value
+     * @param os
+     */
+    fun writeTo(
+        tag: Byte,
+        value: ByteArray?,
+        os: OutputStream
+    ) {
+        value ?: return
+
+        writeTo(tag, value.size, value, os)
     }
 }

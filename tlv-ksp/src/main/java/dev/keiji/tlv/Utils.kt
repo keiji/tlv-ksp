@@ -69,6 +69,7 @@ internal val annotatedPropertyTagComparator =
         return@Comparator compare(obj1Tag, obj2Tag)
     }
 
+@Suppress("MagicNumber")
 internal fun compare(byteArray1: ByteArray, byteArray2: ByteArray): Int {
     if (byteArray1 === byteArray2) {
         return 0
@@ -171,6 +172,7 @@ internal fun getTagAsByte(
     return argumentValue
 }
 
+@Suppress("UnusedParameter")
 internal fun getTagArrayAsString(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
@@ -180,6 +182,7 @@ internal fun getTagArrayAsString(
         .joinToString(", ") { "0x${it.toHex()}.toByte()" }
 }
 
+@Suppress("UnusedParameter")
 internal fun getTagAsString(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
@@ -188,6 +191,7 @@ internal fun getTagAsString(
     return "0x${getTagAsByte(prop, annotationClass).toHex()}.toByte()"
 }
 
+@Suppress("UnusedParameter")
 internal fun getLongDefLengthFieldSizeAtLeast(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,
@@ -217,6 +221,7 @@ internal fun getLongDefLengthFieldSizeAtLeast(
     return argumentValue
 }
 
+@Suppress("UnusedParameter")
 internal fun getQualifiedName(
     prop: KSPropertyDeclaration,
     annotationClass: KClass<*>,

@@ -96,6 +96,7 @@ class CompactTlvEncoderProcessor(
             }
         }
 
+        @Suppress("UnusedParameter")
         private fun processClass(
             classDeclaration: KSClassDeclaration,
             annotatedProperties: Sequence<KSPropertyDeclaration>,
@@ -179,6 +180,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
     }
 
     companion object {
+        @Suppress("UnusedParameter")
         internal fun validateAnnotation(
             tag: Byte,
             className: String = "",

@@ -1,6 +1,6 @@
 package dev.keiji.tlv
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class CompactTlvDecoderTest {

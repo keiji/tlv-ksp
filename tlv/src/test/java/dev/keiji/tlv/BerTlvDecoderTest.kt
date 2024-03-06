@@ -141,7 +141,7 @@ class BerTlvDecoderTest {
             override fun onUnknownLengthItemDetected(tag: ByteArray, inputStream: InputStream) {
                 assertArrayEquals(
                     expected,
-                    inputStream.readAllBytes()
+                    inputStream.readBytes()
                 )
                 onUndefinedLengthItemDetectedFlag = true
             }

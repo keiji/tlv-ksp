@@ -21,6 +21,7 @@ import java.io.OutputStream
 /**
  * Compact-TLV Encoder.
  */
+@Suppress("MagicNumber")
 object CompactTlvEncoder {
     private const val MAX_LENGTH = 0b00010000
 

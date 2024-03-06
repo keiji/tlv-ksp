@@ -24,6 +24,7 @@ import java.math.BigInteger
 /**
  * BER-TLV Encoder.
  */
+@Suppress("MagicNumber")
 object BerTlvEncoder {
     /**
      * Write a TLV-item to OutputStream.

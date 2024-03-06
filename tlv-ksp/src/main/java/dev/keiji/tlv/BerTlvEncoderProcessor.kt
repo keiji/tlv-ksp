@@ -26,7 +26,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
-import java.lang.StringBuilder
 
 private const val MASK_MSB_BITS = 0b100_00000
 private const val MASK_TAG_BITS = 0b00_0_11111
@@ -96,7 +95,10 @@ class BerTlvEncoderProcessor(
             }
         }
 
-        @Suppress("UnusedParameter")
+        @Suppress(
+            "UnusedParameter",
+            "MaxLineLength",
+        )
         private fun processClass(
             classDeclaration: KSClassDeclaration,
             annotatedProperties: Sequence<KSPropertyDeclaration>,
@@ -134,6 +136,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                 .appendText(classTemplate2)
         }
 
+        @Suppress("MaxLineLength")
         private fun generateWriteTo(
             annotatedProperties: Sequence<KSPropertyDeclaration>
         ): String {
@@ -155,7 +158,8 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             annotatedProperties.forEach { prop ->
                 val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
                 val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
-                val longDefLengthFieldSizeAtLeast = getLongDefLengthFieldSizeAtLeast(prop, BerTlvItem::class, logger)
+                val longDefLengthFieldSizeAtLeast =
+                    getLongDefLengthFieldSizeAtLeast(prop, BerTlvItem::class, logger)
                 val converterVariableName = converterTable[qualifiedName]
                 val propName =
                     prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
@@ -189,6 +193,8 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
             propertyName: String = "",
             logger: KSPLogger? = null,
         ) {
+
+            @Suppress("MagicNumber")
             val firstByte: Int = tag.first().toInt() and 0xFF
 
             if ((firstByte and MASK_TAG_BITS) != MASK_TAG_BITS && tag.size > 1) {
@@ -211,6 +217,7 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                     return@forEachIndexed
                 }
 
+                @Suppress("MagicNumber")
                 val value = b.toInt() and 0xFF
 
                 // Check lastIndex(= tag.size - 1)

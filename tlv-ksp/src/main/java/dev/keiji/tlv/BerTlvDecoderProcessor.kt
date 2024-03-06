@@ -26,8 +26,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
-import java.lang.StringBuilder
-import kotlin.collections.HashMap
 
 class BerTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -66,6 +64,7 @@ class BerTlvDecoderProcessor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun processClass(
         classDeclaration: KSClassDeclaration,
         annotatedProperties: Sequence<KSPropertyDeclaration>,
@@ -139,6 +138,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
             .appendText(classTemplate2)
     }
 
+    @Suppress("MaxLineLength")
     private fun generateOnItemDetected(
         annotatedProperties: Sequence<KSPropertyDeclaration>,
         logger: KSPLogger,

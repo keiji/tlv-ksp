@@ -124,6 +124,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
             .appendText(classTemplate2)
     }
 
+    @Suppress("MaxLineLength")
     private fun generateOnItemDetected(
         annotatedProperties: Sequence<KSPropertyDeclaration>,
         logger: KSPLogger,

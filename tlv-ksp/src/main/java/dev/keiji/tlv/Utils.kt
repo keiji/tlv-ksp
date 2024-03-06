@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("TooManyFunctions")
+
 package dev.keiji.tlv
 
 import com.google.devtools.ksp.processing.KSPLogger

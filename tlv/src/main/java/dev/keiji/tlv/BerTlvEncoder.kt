@@ -89,12 +89,9 @@ object BerTlvEncoder {
         size: BigInteger,
         longDefLengthFieldSizeAtLeast: Int = 0,
     ): ByteArray {
-        if (size.compareTo(BigInteger.ZERO) == -1) {
-            throw IllegalArgumentException("size must not be less than 0.")
-        }
-
-        if (size.bitLength() > 126 * 8) {
-            throw IllegalArgumentException("size length must not be greater or equal than 126 bytes.")
+        require(size.compareTo(BigInteger.ZERO) != -1) { "size must not be less than 0." }
+        require(size.bitLength() <= 126 * 8) {
+            "size length must not be greater or equal than 126 bytes."
         }
 
         val isLongDef = size.bitLength() > 7

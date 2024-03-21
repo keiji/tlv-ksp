@@ -111,17 +111,19 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
 
         val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
 
-        file.appendText("package $packageName")
-            .appendText("")
-            .appendText(imports)
-            .appendText("")
-            .appendText(classTemplate0)
-            .appendText("")
-            .appendText(classTemplate1)
-            .appendText("")
-            .appendText(onItemDetected)
-            .appendText("")
-            .appendText(classTemplate2)
+        file.use {
+            it.appendText("package $packageName")
+                .appendText("")
+                .appendText(imports)
+                .appendText("")
+                .appendText(classTemplate0)
+                .appendText("")
+                .appendText(classTemplate1)
+                .appendText("")
+                .appendText(onItemDetected)
+                .appendText("")
+                .appendText(classTemplate2)
+        }
     }
 
     @Suppress("MaxLineLength")

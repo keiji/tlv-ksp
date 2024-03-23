@@ -27,7 +27,7 @@ import java.lang.Integer.max
 import java.util.stream.IntStream.range
 import kotlin.reflect.KClass
 
-internal fun OutputStream.appendText(str: String): OutputStream {
+internal fun OutputStream.appendLine(str: String): OutputStream {
     this.write(str.toByteArray())
     this.write("\n".toByteArray())
     return this

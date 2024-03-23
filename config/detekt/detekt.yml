@@ -472,6 +472,9 @@ potential-bugs:
   MissingPackageDeclaration:
     active: false
     excludes: ['**/*.kts']
+# TODO: https://github.com/detekt/detekt/issues/3865
+#  MissingUseCall:
+#    active: true
   NullCheckOnMutableProperty:
     active: false
   NullableToStringCall:

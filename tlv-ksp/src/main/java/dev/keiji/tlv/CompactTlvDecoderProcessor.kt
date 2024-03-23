@@ -26,8 +26,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
-import java.lang.StringBuilder
-import kotlin.collections.HashMap
 
 class CompactTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -73,11 +71,6 @@ class CompactTlvDecoderProcessor(
     ) {
         val packageName = classDeclaration.containingFile!!.packageName.asString()
         val className = "${classDeclaration.simpleName.asString()}CompactTlvDecoder"
-        val file = codeGenerator.createNewFile(
-            Dependencies(true, classDeclaration.containingFile!!),
-            packageName,
-            className
-        )
 
         val imports = """
 import dev.keiji.tlv.CompactTlvDecoder
@@ -111,18 +104,22 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
 
         val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
 
-        file.use {
-            it.appendText("package $packageName")
-                .appendText("")
-                .appendText(imports)
-                .appendText("")
-                .appendText(classTemplate0)
-                .appendText("")
-                .appendText(classTemplate1)
-                .appendText("")
-                .appendText(onItemDetected)
-                .appendText("")
-                .appendText(classTemplate2)
+        codeGenerator.createNewFile(
+            Dependencies(true, classDeclaration.containingFile!!),
+            packageName,
+            className
+        ).use {
+            it.appendLine("package $packageName")
+                .appendLine("")
+                .appendLine(imports)
+                .appendLine("")
+                .appendLine(classTemplate0)
+                .appendLine("")
+                .appendLine(classTemplate1)
+                .appendLine("")
+                .appendLine(onItemDetected)
+                .appendLine("")
+                .appendLine(classTemplate2)
         }
     }
 

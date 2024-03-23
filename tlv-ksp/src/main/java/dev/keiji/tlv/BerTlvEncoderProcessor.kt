@@ -106,11 +106,6 @@ class BerTlvEncoderProcessor(
         ) {
             val packageName = classDeclaration.containingFile!!.packageName.asString()
             val className = "${classDeclaration.simpleName.asString()}BerTlvEncoder"
-            val file = codeGenerator.createNewFile(
-                Dependencies(true, classDeclaration.containingFile!!),
-                packageName,
-                className
-            )
 
             val imports = """
 import dev.keiji.tlv.BerTlvEncoder
@@ -127,14 +122,18 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
             val writeTo = generateWriteTo(annotatedProperties)
 
-            file.use {
-                it.appendText("package $packageName")
-                    .appendText("")
-                    .appendText(imports)
-                    .appendText("")
-                    .appendText(classTemplate1)
-                    .appendText(writeTo)
-                    .appendText(classTemplate2)
+            codeGenerator.createNewFile(
+                Dependencies(true, classDeclaration.containingFile!!),
+                packageName,
+                className
+            ).use {
+                it.appendLine("package $packageName")
+                    .appendLine("")
+                    .appendLine(imports)
+                    .appendLine("")
+                    .appendLine(classTemplate1)
+                    .appendLine(writeTo)
+                    .appendLine(classTemplate2)
             }
         }
 

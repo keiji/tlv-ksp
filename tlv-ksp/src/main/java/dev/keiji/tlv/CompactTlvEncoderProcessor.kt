@@ -124,13 +124,15 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
             val writeTo = generateWriteTo(annotatedProperties)
 
-            file.appendText("package $packageName")
-                .appendText("")
-                .appendText(imports)
-                .appendText("")
-                .appendText(classTemplate1)
-                .appendText(writeTo)
-                .appendText(classTemplate2)
+            file.use {
+                it.appendText("package $packageName")
+                    .appendText("")
+                    .appendText(imports)
+                    .appendText("")
+                    .appendText(classTemplate1)
+                    .appendText(writeTo)
+                    .appendText(classTemplate2)
+            }
         }
 
         @Suppress("MaxLineLength")

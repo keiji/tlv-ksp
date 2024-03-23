@@ -26,6 +26,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import java.io.OutputStreamWriter
 
 class CompactTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -104,10 +105,12 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
 
         val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
 
-        codeGenerator.createNewFile(
-            Dependencies(true, classDeclaration.containingFile!!),
-            packageName,
-            className
+        OutputStreamWriter(
+            codeGenerator.createNewFile(
+                Dependencies(true, classDeclaration.containingFile!!),
+                packageName,
+                className
+            )
         ).use {
             it.appendLine("package $packageName")
                 .appendLine("")

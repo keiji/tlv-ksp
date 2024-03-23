@@ -22,16 +22,9 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
-import java.io.OutputStream
 import java.lang.Integer.max
 import java.util.stream.IntStream.range
 import kotlin.reflect.KClass
-
-internal fun OutputStream.appendLine(str: String): OutputStream {
-    this.write(str.toByteArray())
-    this.write("\n".toByteArray())
-    return this
-}
 
 internal fun getOrder(
     prop: KSPropertyDeclaration,

@@ -26,6 +26,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import java.io.OutputStreamWriter
 
 private const val MASK_MSB_BITS = 0b100_00000
 private const val MASK_TAG_BITS = 0b00_0_11111
@@ -122,10 +123,12 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
             val writeTo = generateWriteTo(annotatedProperties)
 
-            codeGenerator.createNewFile(
-                Dependencies(true, classDeclaration.containingFile!!),
-                packageName,
-                className
+            OutputStreamWriter(
+                codeGenerator.createNewFile(
+                    Dependencies(true, classDeclaration.containingFile!!),
+                    packageName,
+                    className
+                )
             ).use {
                 it.appendLine("package $packageName")
                     .appendLine("")

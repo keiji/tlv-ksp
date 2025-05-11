@@ -7,6 +7,8 @@ plugins {
 android {
     namespace 'dev.keiji.tlv.sample'
 
+    compileSdk 35
+
     defaultConfig {
         applicationId "dev.keiji.tlv.sample"
         minSdk 19

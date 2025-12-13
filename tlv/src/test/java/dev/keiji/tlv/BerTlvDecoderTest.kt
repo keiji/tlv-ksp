@@ -57,7 +57,10 @@ class BerTlvDecoderTest {
 
         var unknownCalled = false
         val callback = object : BerTlvDecoder.Callback {
-            override fun onItemDetected(tag: ByteArray, value: ByteArray) {}
+            override fun onItemDetected(tag: ByteArray, value: ByteArray) {
+                // Do nothing
+            }
+
             override fun onUnknownLengthItemDetected(tag: ByteArray, inputStream: InputStream) {
                 unknownCalled = true
                 assertArrayEquals(byteArrayOf(0x01), tag)
@@ -81,8 +84,15 @@ class BerTlvDecoderTest {
 
         var largeCalled = false
         val callback = object : BerTlvDecoder.Callback {
-            override fun onItemDetected(tag: ByteArray, value: ByteArray) {}
-            override fun onLargeItemDetected(tag: ByteArray, length: BigInteger, inputStream: InputStream) {
+            override fun onItemDetected(tag: ByteArray, value: ByteArray) {
+                // Do nothing
+            }
+
+            override fun onLargeItemDetected(
+                tag: ByteArray,
+                length: BigInteger,
+                inputStream: InputStream
+            ) {
                 largeCalled = true
                 assertArrayEquals(byteArrayOf(0x01), tag)
                 assertEquals(BigInteger("4294967296"), length)
@@ -151,11 +161,17 @@ class BerTlvDecoderTest {
     fun defaultCallbackTest() {
         // Verify default methods of Callback
         val callback = object : BerTlvDecoder.Callback {
-             override fun onItemDetected(tag: ByteArray, value: ByteArray) {}
+            override fun onItemDetected(tag: ByteArray, value: ByteArray) {
+                // Do nothing
+            }
         }
 
         // These should not throw exception
         callback.onUnknownLengthItemDetected(byteArrayOf(), ByteArrayInputStream(byteArrayOf()))
-        callback.onLargeItemDetected(byteArrayOf(), BigInteger.ZERO, ByteArrayInputStream(byteArrayOf()))
+        callback.onLargeItemDetected(
+            byteArrayOf(),
+            BigInteger.ZERO,
+            ByteArrayInputStream(byteArrayOf())
+        )
     }
 }

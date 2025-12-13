@@ -85,18 +85,18 @@ class BerTlvEncoderTest {
         // 1 requires 1 bit.
         // However, if longDefLengthFieldSizeAtLeast is specified, it seems we might want to force long definition?
         // But the current implementation checks isLongDef first.
-        /*
-        val isLongDef = size.bitLength() > 7
-
-        if (!isLongDef) {
-            // Short definition
-            return byteArrayOf(size.toByte())
-        }
-        */
+        // val isLongDef = size.bitLength() > 7
+        //
+        // if (!isLongDef) {
+        //     // Short definition
+        //     return byteArrayOf(size.toByte())
+        // }
         // So if value is 1, it returns short definition regardless of longDefLengthFieldSizeAtLeast.
-        // Let's test with a value that forces long definition, e.g., 128 (0x80), or maybe just verify behavior for small values.
+        // Let's test with a value that forces long definition, e.g., 128 (0x80),
+        // or maybe just verify behavior for small values.
 
-        // If the intent of longDefLengthFieldSizeAtLeast is to pad even small values, the implementation ignores it for small values.
+        // If the intent of longDefLengthFieldSizeAtLeast is to pad even small values,
+        // the implementation ignores it for small values.
         // So let's test with a large value but request MORE padding.
 
         // Value 128 (0x80). bitLength is 8 (or 7 depending on how you count, but 1000 0000 is 8 bits).
@@ -120,18 +120,14 @@ class BerTlvEncoderTest {
         Assert.assertArrayEquals(expected, actual)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun convertToLengthTest_TooLarge() {
         // 126 * 8 = 1008 bits.
         // We need a BigInteger larger than that.
         val large = BigInteger.ONE.shiftLeft(1008 + 1)
 
-        try {
-            BerTlvEncoder.convertToLength(large)
-            Assert.fail()
-        } catch (e: IllegalArgumentException) {
-            // Success
-        }
+        BerTlvEncoder.convertToLength(large)
+        Assert.fail()
     }
 
     @Test

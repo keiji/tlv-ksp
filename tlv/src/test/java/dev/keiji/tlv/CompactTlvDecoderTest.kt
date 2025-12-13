@@ -110,6 +110,7 @@ class CompactTlvDecoderTest {
         val inputStream = ByteArrayInputStream(data)
         val callback = object : CompactTlvDecoder.Callback {
             override fun onItemDetected(tag: Byte, value: ByteArray) {
+                // Do nothing
             }
         }
         CompactTlvDecoder.readFrom(inputStream, callback)

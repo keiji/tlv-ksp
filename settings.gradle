@@ -15,6 +15,23 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "TlvKsp"
-include ':app'
+
+def androidHome = System.getenv("ANDROID_HOME")
+def localProperties = new File(settingsDir, "local.properties")
+def hasSdkDir = false
+if (localProperties.exists()) {
+    Properties properties = new Properties()
+    localProperties.withInputStream { instr ->
+        properties.load(instr)
+    }
+    hasSdkDir = properties.getProperty("sdk.dir") != null
+}
+
+if (androidHome != null || hasSdkDir) {
+    include ':app'
+} else {
+    println "Android SDK not found. Skipping ':app' module."
+}
+
 include ':tlv'
 include ':tlv-ksp'

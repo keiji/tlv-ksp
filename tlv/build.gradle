@@ -28,6 +28,13 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
 }
 
+jacocoTestReport {
+    reports {
+        csv.required = true
+        html.required = true
+    }
+}
+
 group = rootProject.ext.groupId
 version = rootProject.ext.versionCode
 

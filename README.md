@@ -2,6 +2,8 @@ TLV-KSP
 ========
 
 [![CI](https://github.com/keiji/tlv-ksp/actions/workflows/ci.yml/badge.svg)](https://github.com/keiji/tlv-ksp/actions/workflows/ci.yml)
+![Coverage](.github/badges/jacoco.svg)
+![Branches](.github/badges/branches.svg)
 
 TLV-KSP is a Kotlin library for encoding and decoding TLV(Tag-Length-Value) data. This library is
 now supported BER(Basic Encoding Rules) and Compact format.
@@ -16,6 +18,16 @@ dependencies {
     ksp("dev.keiji.tlv:tlv-ksp:0.3.3")
 }
 ```
+
+### Verify Coverage
+
+To verify code coverage, run the following command:
+
+```bash
+./gradlew tlv:jacocoTestReport
+```
+
+The coverage report will be generated at `tlv/build/reports/jacoco/test/html/index.html`.
 
 ### Usage
 

@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'maven-publish'
     id 'signing'
+    id 'jacoco'
 }
 
 java {

@@ -21,14 +21,10 @@ class BerTlvEncoderTest {
         Assert.assertArrayEquals(expected, actual)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun convertToLengthTest_Exception1() {
-        try {
-            val actual = BerTlvEncoder.convertToLength(-1)
-            Assert.fail()
-        } catch (exception: IllegalArgumentException) {
-            println(exception)
-        }
+        BerTlvEncoder.convertToLength(-1)
+        Assert.fail()
     }
 
     @Test

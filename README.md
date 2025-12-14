@@ -17,6 +17,16 @@ dependencies {
 }
 ```
 
+### Verify Coverage
+
+To verify code coverage, run the following command:
+
+```bash
+./gradlew tlv:jacocoTestReport
+```
+
+The coverage report will be generated at `tlv/build/reports/jacoco/test/html/index.html`.
+
 ### Usage
 
 #### BER-TLV

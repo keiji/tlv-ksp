@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'maven-publish'
     id 'signing'
+    id 'jacoco'
 }
 
 java {
@@ -25,6 +26,14 @@ compileTestKotlin {
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
+}
+
+jacocoTestReport {
+    reports {
+        csv.required = true
+        xml.required = true
+        html.required = true
+    }
 }
 
 group = rootProject.ext.groupId

@@ -139,4 +139,13 @@ class BerTlvEncoderTest {
         val expected = byteArrayOf(0x81.toByte(), 0x80.toByte())
         Assert.assertArrayEquals(expected, actual)
     }
+
+    @Test
+    fun convertToLengthTest_BitLength15() {
+        val value = 32767
+        val expected = byteArrayOf(0x82.toByte(), 0x7F, 0xFF.toByte())
+
+        val actual = BerTlvEncoder.convertToLength(value)
+        Assert.assertArrayEquals(expected, actual)
+    }
 }

@@ -39,10 +39,10 @@ object CompactTlvEncoder {
         value: ByteArray,
         os: OutputStream
     ) {
-        if (tag > MAX_LENGTH && tag < 0) {
+        if (tag >= MAX_LENGTH || tag < 0) {
             return
         }
-        if (length > MAX_LENGTH && length < 0) {
+        if (length >= MAX_LENGTH || length < 0) {
             return
         }
         val tagAndLength = packTagAndLength(tag, length)

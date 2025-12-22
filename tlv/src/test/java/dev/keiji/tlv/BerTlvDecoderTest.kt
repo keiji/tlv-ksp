@@ -174,4 +174,23 @@ class BerTlvDecoderTest {
             ByteArrayInputStream(byteArrayOf())
         )
     }
+
+    @Test(expected = StreamCorruptedException::class)
+    fun readLengthFieldBytes_EOF_Middle() {
+        // 0x82 -> Long form, 2 bytes.
+        // Stream has only 1 byte after that.
+        val data = byteArrayOf(0x82.toByte(), 0x01)
+        val inputStream = ByteArrayInputStream(data)
+        BerTlvDecoder.readLengthFieldBytes(inputStream)
+    }
+
+    @Test
+    fun readTagFieldBytesTest_EOF_Middle() {
+        // 0x1F -> Start of multi-byte tag.
+        // Stream ends.
+        val data = byteArrayOf(0x1F)
+        val inputStream = ByteArrayInputStream(data)
+        val tag = BerTlvDecoder.readTagFieldBytes(inputStream)
+        assertNull(tag)
+    }
 }

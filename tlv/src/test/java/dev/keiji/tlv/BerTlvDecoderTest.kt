@@ -193,4 +193,26 @@ class BerTlvDecoderTest {
         val tag = BerTlvDecoder.readTagFieldBytes(inputStream)
         assertNull(tag)
     }
+
+    @Test
+    fun readLengthFieldBytes_PartialRead_Success() {
+        // 0x82 -> Long form, 2 bytes. 0x01, 0xFF. (Length 511)
+        val data = byteArrayOf(0x82.toByte(), 0x01, 0xFF.toByte())
+        val inputStream = PartialReadInputStream(ByteArrayInputStream(data))
+
+        val lengthBytes = BerTlvDecoder.readLengthFieldBytes(inputStream)
+
+        assertNotNull(lengthBytes)
+        assertArrayEquals(data, lengthBytes)
+    }
+
+    private class PartialReadInputStream(val wrapped: InputStream) : InputStream() {
+        override fun read(): Int = wrapped.read()
+
+        override fun read(b: ByteArray, off: Int, len: Int): Int {
+            // Force partial read: read at most 1 byte if len > 1
+            val request = if (len > 1) 1 else len
+            return wrapped.read(b, off, request)
+        }
+    }
 }

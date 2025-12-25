@@ -151,7 +151,7 @@ object BerTlvDecoder {
                 inputStream.read(lengthFieldBytes, offset, (lengthFieldSize - offset))
             if (readLength < 0) {
                 throw StreamCorruptedException()
-            } else if (readLength < (fieldLength - offset)) {
+            } else if (readLength < (lengthFieldSize - offset)) {
                 offset += readLength
             } else {
                 break

@@ -79,43 +79,53 @@ class CompactTlvEncoderTest {
     }
 
     @Test
-    fun writeToTest_InvalidTag() {
-        // Tag > MAX_LENGTH (16)
-        // private const val MAX_LENGTH = 0b00010000 = 16
-        // But Byte is signed, so 0x10 is 16.
-        // The check is: if (tag > MAX_LENGTH && tag < 0)
-        // Wait, the logic in CompactTlvEncoder seems weird:
-        // if (tag > MAX_LENGTH && tag < 0) { return }
-        // AND condition? It's impossible for a number to be > 16 AND < 0.
-        // It probably should be OR (||).
-        // Let's verify what the code says.
-        /*
-        if (tag > MAX_LENGTH && tag < 0) {
-            return
-        }
-         */
-        // If it is indeed &&, then this check is dead code (always false).
-        // Let's check if I can trigger it.
-
-        // If I pass tag = 17 (0x11), 17 > 16 is true. 17 < 0 is false. So condition is false.
-        // It proceeds to packTagAndLength.
-
-        // Let's try to test it as is.
-        val tag: Byte = 0x11
+    fun writeToTest_InvalidTag_TooLarge() {
+        val tag: Byte = 0x10 // 16
         val value = byteArrayOf(0x01)
         val os = ByteArrayOutputStream()
 
         CompactTlvEncoder.writeTo(tag, value, os)
 
-        // 0x11 is 17. 17 << 4 = 272. Byte overflow.
-        // 17 = 0001 0001.
-        // 0001 0001 << 4 = 0001 0001 0000 (272)
-        // toByte() takes lower 8 bits: 0001 0000 = 0x10.
-        // Or with length (1): 0x11.
-        // So it writes 0x11 0x01.
+        val result = os.toByteArray()
+        Assert.assertEquals(0, result.size)
+    }
+
+    @Test
+    fun writeToTest_InvalidTag_Negative() {
+        val tag: Byte = -1
+        val value = byteArrayOf(0x01)
+        val os = ByteArrayOutputStream()
+
+        CompactTlvEncoder.writeTo(tag, value, os)
 
         val result = os.toByteArray()
-        val expected = byteArrayOf(0x11, 0x01)
-        Assert.assertArrayEquals(expected, result)
+        Assert.assertEquals(0, result.size)
+    }
+
+    @Test
+    fun writeToTest_InvalidLength_TooLarge() {
+        val tag: Byte = 0x1
+        val length = 16
+        val value = byteArrayOf(0x01) // value size ignored when explicit length passed?
+        // writeTo(tag, length, value, os) uses passed length.
+        val os = ByteArrayOutputStream()
+
+        CompactTlvEncoder.writeTo(tag, length, value, os)
+
+        val result = os.toByteArray()
+        Assert.assertEquals(0, result.size)
+    }
+
+    @Test
+    fun writeToTest_InvalidLength_Negative() {
+        val tag: Byte = 0x1
+        val length = -1
+        val value = byteArrayOf(0x01)
+        val os = ByteArrayOutputStream()
+
+        CompactTlvEncoder.writeTo(tag, length, value, os)
+
+        val result = os.toByteArray()
+        Assert.assertEquals(0, result.size)
     }
 }

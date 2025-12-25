@@ -26,6 +26,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import java.io.OutputStreamWriter
 
 private const val MASK_MSB_BITS = 0b100_00000
 private const val MASK_TAG_BITS = 0b00_0_11111
@@ -106,11 +107,6 @@ class BerTlvEncoderProcessor(
         ) {
             val packageName = classDeclaration.containingFile!!.packageName.asString()
             val className = "${classDeclaration.simpleName.asString()}BerTlvEncoder"
-            val file = codeGenerator.createNewFile(
-                Dependencies(true, classDeclaration.containingFile!!),
-                packageName,
-                className
-            )
 
             val imports = """
 import dev.keiji.tlv.BerTlvEncoder
@@ -127,14 +123,20 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
             val writeTo = generateWriteTo(annotatedProperties)
 
-            file.use {
-                it.appendText("package $packageName")
-                    .appendText("")
-                    .appendText(imports)
-                    .appendText("")
-                    .appendText(classTemplate1)
-                    .appendText(writeTo)
-                    .appendText(classTemplate2)
+            OutputStreamWriter(
+                codeGenerator.createNewFile(
+                    Dependencies(true, classDeclaration.containingFile!!),
+                    packageName,
+                    className
+                )
+            ).use {
+                it.appendLine("package $packageName")
+                    .appendLine("")
+                    .appendLine(imports)
+                    .appendLine("")
+                    .appendLine(classTemplate1)
+                    .appendLine(writeTo)
+                    .appendLine(classTemplate2)
             }
         }
 

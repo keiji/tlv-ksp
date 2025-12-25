@@ -26,6 +26,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import java.io.OutputStreamWriter
 
 class BerTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -72,11 +73,6 @@ class BerTlvDecoderProcessor(
     ) {
         val packageName = classDeclaration.containingFile!!.packageName.asString()
         val className = "${classDeclaration.simpleName.asString()}BerTlvDecoder"
-        val file = codeGenerator.createNewFile(
-            Dependencies(true, classDeclaration.containingFile!!),
-            packageName,
-            className
-        )
 
         val imports = """
 import dev.keiji.tlv.BerTlvDecoder
@@ -125,18 +121,24 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
 
         val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
 
-        file.use {
-            it.appendText("package $packageName")
-                .appendText("")
-                .appendText(imports)
-                .appendText("")
-                .appendText(classTemplate0)
-                .appendText("")
-                .appendText(classTemplate1)
-                .appendText("")
-                .appendText(onItemDetected)
-                .appendText("")
-                .appendText(classTemplate2)
+        OutputStreamWriter(
+            codeGenerator.createNewFile(
+                Dependencies(true, classDeclaration.containingFile!!),
+                packageName,
+                className
+            )
+        ).use {
+            it.appendLine("package $packageName")
+                .appendLine("")
+                .appendLine(imports)
+                .appendLine("")
+                .appendLine(classTemplate0)
+                .appendLine("")
+                .appendLine(classTemplate1)
+                .appendLine("")
+                .appendLine(onItemDetected)
+                .appendLine("")
+                .appendLine(classTemplate2)
         }
     }
 

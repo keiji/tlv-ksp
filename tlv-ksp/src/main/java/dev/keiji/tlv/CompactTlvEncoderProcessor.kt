@@ -26,6 +26,14 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.writeTo
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 
 private const val MAX_TAG_VALUE: Byte = 0b00001111
 private const val ZERO: Byte = 0
@@ -103,81 +111,90 @@ class CompactTlvEncoderProcessor(
         ) {
             val packageName = classDeclaration.containingFile!!.packageName.asString()
             val className = "${classDeclaration.simpleName.asString()}CompactTlvEncoder"
-            val file = codeGenerator.createNewFile(
-                Dependencies(true, classDeclaration.containingFile!!),
-                packageName,
-                className
-            )
 
-            val imports = """
-import dev.keiji.tlv.CompactTlvEncoder
-import java.io.*
-        """.trimIndent()
+            val fileSpec = FileSpec.builder(packageName, className)
+                .addFunction(generateWriteToFunction(classDeclaration, annotatedProperties, logger))
+                .build()
 
-            val classTemplate1 = """
-fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream) {
-        """.trimIndent()
+            fileSpec.writeTo(codeGenerator, Dependencies(true, classDeclaration.containingFile!!))
+        }
 
-            val classTemplate2 = """
-}
-        """.trimIndent()
+        private fun generateWriteToFunction(
+            classDeclaration: KSClassDeclaration,
+            annotatedProperties: Sequence<KSPropertyDeclaration>,
+            logger: KSPLogger
+        ): FunSpec {
+            val receiverType = classDeclaration.toClassName()
 
-            val writeTo = generateWriteTo(annotatedProperties)
-
-            file.use {
-                it.appendText("package $packageName")
-                    .appendText("")
-                    .appendText(imports)
-                    .appendText("")
-                    .appendText(classTemplate1)
-                    .appendText(writeTo)
-                    .appendText(classTemplate2)
-            }
+            return FunSpec.builder("writeTo")
+                .receiver(receiverType)
+                .addParameter("outputStream", OutputStream::class)
+                .addCode(generateWriteToCode(annotatedProperties, logger))
+                .build()
         }
 
         @Suppress("MaxLineLength")
-        private fun generateWriteTo(
-            annotatedProperties: Sequence<KSPropertyDeclaration>
-        ): String {
-            val sb = StringBuilder()
+        private fun generateWriteToCode(
+            annotatedProperties: Sequence<KSPropertyDeclaration>,
+            logger: KSPLogger
+        ): CodeBlock {
+            val block = CodeBlock.builder()
 
             val converterTable = HashMap<String, String>()
             val converters = annotatedProperties
                 .map { prop -> getQualifiedName(prop, CompactTlvItem::class, logger) }
                 .distinct()
+
             converters.forEach { qualifiedName ->
                 val variableName = generateVariableName(qualifiedName)
-                sb.append("    val $variableName = ${qualifiedName}()\n")
-
+                block.addStatement("val %N = %T()", variableName, ClassName.bestGuess(qualifiedName))
                 converterTable[qualifiedName] = variableName
             }
 
-            sb.append("\n")
+            if (converters.iterator().hasNext()) {
+                block.add("\n")
+            }
 
             annotatedProperties.forEach { prop ->
                 val tag = getTagAsString(prop, CompactTlvItem::class, logger)
                 val qualifiedName = getQualifiedName(prop, CompactTlvItem::class, logger)
                 val converterVariableName = converterTable[qualifiedName]
-                val propName =
-                    prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
+
+                val isNullable = prop.type.resolve().isMarkedNullable
+                val propName = prop.simpleName.asString()
+                val propAccess = if (isNullable) "$propName?" else propName
 
                 val decClass = prop.type.resolve().declaration
+                val compactTlvEncoderClass = ClassName("dev.keiji.tlv", "CompactTlvEncoder")
+
                 if (compactTlvClasses.contains(decClass)) {
-                    sb.append("    ${propName}.also {\n")
-                    sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
-                    sb.append("            ${propName}.writeTo(baos)\n")
-                    sb.append("            baos.toByteArray()\n")
-                    sb.append("        }\n")
-                    sb.append("        CompactTlvEncoder.writeTo(${tag}, data, outputStream)\n")
-                    sb.append("    }\n")
+                    block.beginControlFlow("%L.also", propAccess)
+                    block.addStatement("val data = %T().let { baos ->", ByteArrayOutputStream::class)
+
+                    if (isNullable) {
+                        block.addStatement("it.writeTo(baos)")
+                    } else {
+                        block.addStatement("this.%N.writeTo(baos)", propName)
+                    }
+
+                    block.addStatement("baos.toByteArray()")
+                    block.endControlFlow() // let
+
+                    block.addStatement("%T.writeTo(%L, data, outputStream)", compactTlvEncoderClass, tag)
+                    block.endControlFlow() // also
                 } else {
-                    sb.append("    ${propName}.also {\n")
-                    sb.append("        CompactTlvEncoder.writeTo(${tag}, ${converterVariableName}.convertToByteArray(it), outputStream)\n")
-                    sb.append("    }\n")
+                    block.beginControlFlow("%L.also", propAccess)
+                    block.addStatement(
+                        "%T.writeTo(%L, %N.convertToByteArray(it), outputStream)",
+                        compactTlvEncoderClass,
+                        tag,
+                        converterVariableName
+                    )
+                    block.endControlFlow()
                 }
             }
 
-            return sb.toString()
+            return block.build()
         }
     }
 

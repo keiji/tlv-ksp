@@ -174,16 +174,10 @@ class BerTlvEncoderProcessor(
 
                 if (berTlvClasses.contains(decClass)) {
                     block.beginControlFlow("%L.also", propAccess)
-                    block.addStatement("val data = %T().let { baos ->", ByteArrayOutputStream::class)
 
-                    // Inside also, `it` is the value.
-                    // If isNullable, `it` is non-null because `?.also` calls only if non-null.
-                    // The original code used property name recursively on the object?
-                    // Wait, original: ${propName}.writeTo(baos)
-                    // If propName is "obj?", then "obj?.writeTo(baos)".
-                    // But inside also { ... }, if we use `it`, it is cleaner.
-                    // However, `writeTo` is an extension function we are generating or exists.
-                    // Let's assume we can use `it.writeTo(baos)`.
+                    // Manually handle the `let` block to avoid indentation issues with control flow
+                    block.addStatement("val data = %T().let { baos ->", ByteArrayOutputStream::class)
+                    block.indent()
 
                     if (isNullable) {
                         block.addStatement("it.writeTo(baos)")
@@ -192,7 +186,8 @@ class BerTlvEncoderProcessor(
                     }
 
                     block.addStatement("baos.toByteArray()")
-                    block.endControlFlow() // let
+                    block.unindent()
+                    block.addStatement("}") // close let
 
                     block.addStatement("%T.writeTo(byteArrayOf(%L), data, outputStream, longDefLengthFieldSizeAtLeast = %L)",
                         berTlvEncoderClass,

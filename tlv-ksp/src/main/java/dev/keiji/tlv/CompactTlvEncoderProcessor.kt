@@ -170,6 +170,7 @@ class CompactTlvEncoderProcessor(
                 if (compactTlvClasses.contains(decClass)) {
                     block.beginControlFlow("%L.also", propAccess)
                     block.addStatement("val data = %T().let { baos ->", ByteArrayOutputStream::class)
+                    block.indent()
 
                     if (isNullable) {
                         block.addStatement("it.writeTo(baos)")
@@ -178,7 +179,8 @@ class CompactTlvEncoderProcessor(
                     }
 
                     block.addStatement("baos.toByteArray()")
-                    block.endControlFlow() // let
+                    block.unindent()
+                    block.addStatement("}") // close let
 
                     block.addStatement("%T.writeTo(%L, data, outputStream)", compactTlvEncoderClass, tag)
                     block.endControlFlow() // also

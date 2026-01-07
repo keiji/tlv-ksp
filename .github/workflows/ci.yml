@@ -80,7 +80,7 @@ jobs:
 
     - name: Comment Coverage on PR
       if: github.event_name == 'pull_request'
-      uses: Madrapps/jacoco-report@v1.7.1
+      uses: Madrapps/jacoco-report@v1.7.2
       with:
         paths: tlv/build/reports/jacoco/test/jacocoTestReport.xml
         token: ${{ secrets.GITHUB_TOKEN }}

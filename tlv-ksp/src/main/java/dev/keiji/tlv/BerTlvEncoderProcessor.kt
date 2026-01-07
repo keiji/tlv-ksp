@@ -26,6 +26,14 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.writeTo
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 
 private const val MASK_MSB_BITS = 0b100_00000
 private const val MASK_TAG_BITS = 0b00_0_11111
@@ -106,56 +114,49 @@ class BerTlvEncoderProcessor(
         ) {
             val packageName = classDeclaration.containingFile!!.packageName.asString()
             val className = "${classDeclaration.simpleName.asString()}BerTlvEncoder"
-            val file = codeGenerator.createNewFile(
-                Dependencies(true, classDeclaration.containingFile!!),
-                packageName,
-                className
-            )
 
-            val imports = """
-import dev.keiji.tlv.BerTlvEncoder
-import java.io.*
-        """.trimIndent()
+            val fileSpec = FileSpec.builder(packageName, className)
+                .addFunction(generateWriteToFunction(classDeclaration, annotatedProperties, logger))
+                .build()
 
-            val classTemplate1 = """
-fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream) {
-        """.trimIndent()
+            fileSpec.writeTo(codeGenerator, Dependencies(true, classDeclaration.containingFile!!))
+        }
 
-            val classTemplate2 = """
-}
-        """.trimIndent()
+        private fun generateWriteToFunction(
+            classDeclaration: KSClassDeclaration,
+            annotatedProperties: Sequence<KSPropertyDeclaration>,
+            logger: KSPLogger
+        ): FunSpec {
+            val receiverType = classDeclaration.toClassName()
 
-            val writeTo = generateWriteTo(annotatedProperties)
-
-            file.use {
-                it.appendText("package $packageName")
-                    .appendText("")
-                    .appendText(imports)
-                    .appendText("")
-                    .appendText(classTemplate1)
-                    .appendText(writeTo)
-                    .appendText(classTemplate2)
-            }
+            return FunSpec.builder("writeTo")
+                .receiver(receiverType)
+                .addParameter("outputStream", OutputStream::class)
+                .addCode(generateWriteToCode(annotatedProperties, logger))
+                .build()
         }
 
         @Suppress("MaxLineLength")
-        private fun generateWriteTo(
-            annotatedProperties: Sequence<KSPropertyDeclaration>
-        ): String {
-            val sb = StringBuilder()
+        private fun generateWriteToCode(
+            annotatedProperties: Sequence<KSPropertyDeclaration>,
+            logger: KSPLogger
+        ): CodeBlock {
+            val block = CodeBlock.builder()
 
             val converterTable = HashMap<String, String>()
             val converters = annotatedProperties
                 .map { prop -> getQualifiedName(prop, BerTlvItem::class, logger) }
                 .distinct()
+
             converters.forEach { qualifiedName ->
                 val variableName = generateVariableName(qualifiedName)
-                sb.append("    val $variableName = ${qualifiedName}()\n")
-
+                block.addStatement("val %N = %T()", variableName, ClassName.bestGuess(qualifiedName))
                 converterTable[qualifiedName] = variableName
             }
 
-            sb.append("\n")
+            if (converters.iterator().hasNext()) {
+                block.add("\n")
+            }
 
             annotatedProperties.forEach { prop ->
                 val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
@@ -163,26 +164,51 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
                 val longDefLengthFieldSizeAtLeast =
                     getLongDefLengthFieldSizeAtLeast(prop, BerTlvItem::class, logger)
                 val converterVariableName = converterTable[qualifiedName]
-                val propName =
-                    prop.simpleName.asString() + if (prop.type.resolve().isMarkedNullable) "?" else ""
+
+                val isNullable = prop.type.resolve().isMarkedNullable
+                val propName = prop.simpleName.asString()
+                val propAccess = if (isNullable) "$propName?" else propName
 
                 val decClass = prop.type.resolve().declaration
+                val berTlvEncoderClass = ClassName("dev.keiji.tlv", "BerTlvEncoder")
+
                 if (berTlvClasses.contains(decClass)) {
-                    sb.append("    ${propName}.also {\n")
-                    sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
-                    sb.append("            ${propName}.writeTo(baos)\n")
-                    sb.append("            baos.toByteArray()\n")
-                    sb.append("        }\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), data, outputStream, longDefLengthFieldSizeAtLeast = ${longDefLengthFieldSizeAtLeast})\n")
-                    sb.append("    }\n")
+                    block.beginControlFlow("%L.also", propAccess)
+
+                    // Manually handle the `let` block to avoid indentation issues with control flow
+                    block.addStatement("val data = %T().let { baos ->", ByteArrayOutputStream::class)
+                    block.indent()
+
+                    if (isNullable) {
+                        block.addStatement("it.writeTo(baos)")
+                    } else {
+                        block.addStatement("this.%N.writeTo(baos)", propName)
+                    }
+
+                    block.addStatement("baos.toByteArray()")
+                    block.unindent()
+                    block.addStatement("}") // close let
+
+                    block.addStatement("%T.writeTo(byteArrayOf(%L), data, outputStream, longDefLengthFieldSizeAtLeast = %L)",
+                        berTlvEncoderClass,
+                        tagArray,
+                        longDefLengthFieldSizeAtLeast
+                    )
+                    block.endControlFlow() // also
                 } else {
-                    sb.append("    ${propName}.also {\n")
-                    sb.append("        BerTlvEncoder.writeTo(byteArrayOf(${tagArray}), ${converterVariableName}.convertToByteArray(it), outputStream, longDefLengthFieldSizeAtLeast = ${longDefLengthFieldSizeAtLeast})\n")
-                    sb.append("    }\n")
+                    block.beginControlFlow("%L.also", propAccess)
+                    block.addStatement(
+                        "%T.writeTo(byteArrayOf(%L), %N.convertToByteArray(it), outputStream, longDefLengthFieldSizeAtLeast = %L)",
+                        berTlvEncoderClass,
+                        tagArray,
+                        converterVariableName,
+                        longDefLengthFieldSizeAtLeast
+                    )
+                    block.endControlFlow()
                 }
             }
 
-            return sb.toString()
+            return block.build()
         }
     }
 

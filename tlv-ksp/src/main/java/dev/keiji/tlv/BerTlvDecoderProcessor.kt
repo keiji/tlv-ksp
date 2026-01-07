@@ -26,6 +26,18 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.writeTo
+import java.io.ByteArrayInputStream
+import java.io.InputStream
+import java.math.BigInteger
 
 class BerTlvDecoderProcessor(
     private val codeGenerator: CodeGenerator,
@@ -72,118 +84,133 @@ class BerTlvDecoderProcessor(
     ) {
         val packageName = classDeclaration.containingFile!!.packageName.asString()
         val className = "${classDeclaration.simpleName.asString()}BerTlvDecoder"
-        val file = codeGenerator.createNewFile(
-            Dependencies(true, classDeclaration.containingFile!!),
-            packageName,
-            className
-        )
 
-        val imports = """
-import dev.keiji.tlv.BerTlvDecoder
-import java.io.*
-import java.math.BigInteger
-        """.trimIndent()
+        val fileSpec = FileSpec.builder(packageName, className)
+            .addFunction(generateReadFromByteArray(classDeclaration))
+            .addFunction(generateReadFromInputStream(classDeclaration, annotatedProperties, logger))
+            .build()
 
-        val classTemplate0 = """
-fun ${classDeclaration.simpleName.asString()}.readFrom(
-    byteArray: ByteArray,
-    postCallback: BerTlvDecoder.Callback? = null,
-) {
-    readFrom(ByteArrayInputStream(byteArray), postCallback)
-}
-        """.trimIndent()
-
-        val classTemplate1 = """
-fun ${classDeclaration.simpleName.asString()}.readFrom(
-    inputStream: InputStream,
-    postCallback: BerTlvDecoder.Callback? = null,
-) {
-
-    BerTlvDecoder.readFrom(inputStream,
-        object : BerTlvDecoder.Callback {
-            override fun onLargeItemDetected(
-                tag: ByteArray,
-                length: BigInteger,
-                inputStream: InputStream
-            ) {
-                postCallback?.onLargeItemDetected(tag, length, inputStream)
-            }
-
-            override fun onUnknownLengthItemDetected(
-                tag: ByteArray,
-                inputStream: InputStream
-            ) {
-                postCallback?.onUnknownLengthItemDetected(tag, inputStream)
-            }
-        """.trimIndent()
-
-        val classTemplate2 = """
-        }
-    )
-}
-        """.trimIndent()
-
-        val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
-
-        file.use {
-            it.appendText("package $packageName")
-                .appendText("")
-                .appendText(imports)
-                .appendText("")
-                .appendText(classTemplate0)
-                .appendText("")
-                .appendText(classTemplate1)
-                .appendText("")
-                .appendText(onItemDetected)
-                .appendText("")
-                .appendText(classTemplate2)
-        }
+        fileSpec.writeTo(codeGenerator, Dependencies(true, classDeclaration.containingFile!!))
     }
 
-    @Suppress("MaxLineLength")
+    private fun generateReadFromByteArray(
+        classDeclaration: KSClassDeclaration
+    ): FunSpec {
+        val berTlvDecoderCallback = ClassName("dev.keiji.tlv", "BerTlvDecoder", "Callback")
+        val receiverType = classDeclaration.toClassName()
+
+        return FunSpec.builder("readFrom")
+            .receiver(receiverType)
+            .addParameter("byteArray", ByteArray::class)
+            .addParameter(
+                ParameterSpec.builder("postCallback", berTlvDecoderCallback.copy(nullable = true))
+                    .defaultValue("null")
+                    .build()
+            )
+            .addStatement("readFrom(%T(byteArray), postCallback)", ByteArrayInputStream::class)
+            .build()
+    }
+
+    private fun generateReadFromInputStream(
+        classDeclaration: KSClassDeclaration,
+        annotatedProperties: Sequence<KSPropertyDeclaration>,
+        logger: KSPLogger
+    ): FunSpec {
+        val berTlvDecoder = ClassName("dev.keiji.tlv", "BerTlvDecoder")
+        val berTlvDecoderCallback = berTlvDecoder.nestedClass("Callback")
+        val receiverType = classDeclaration.toClassName()
+
+        val callbackObject = TypeSpec.anonymousClassBuilder()
+            .addSuperinterface(berTlvDecoderCallback)
+            .addFunction(
+                FunSpec.builder("onLargeItemDetected")
+                    .addModifiers(KModifier.OVERRIDE)
+                    .addParameter("tag", ByteArray::class)
+                    .addParameter("length", BigInteger::class)
+                    .addParameter("inputStream", InputStream::class)
+                    .addStatement("postCallback?.onLargeItemDetected(tag, length, inputStream)")
+                    .build()
+            )
+            .addFunction(
+                FunSpec.builder("onUnknownLengthItemDetected")
+                    .addModifiers(KModifier.OVERRIDE)
+                    .addParameter("tag", ByteArray::class)
+                    .addParameter("inputStream", InputStream::class)
+                    .addStatement("postCallback?.onUnknownLengthItemDetected(tag, inputStream)")
+                    .build()
+            )
+            .addFunction(generateOnItemDetected(classDeclaration, annotatedProperties, logger))
+            .build()
+
+        return FunSpec.builder("readFrom")
+            .receiver(receiverType)
+            .addParameter("inputStream", InputStream::class)
+            .addParameter(
+                ParameterSpec.builder("postCallback", berTlvDecoderCallback.copy(nullable = true))
+                    .defaultValue("null")
+                    .build()
+            )
+            .addStatement("%T.readFrom(inputStream, %L)", berTlvDecoder, callbackObject)
+            .build()
+    }
+
+    @Suppress("UnusedParameter", "MaxLineLength")
     private fun generateOnItemDetected(
+        classDeclaration: KSClassDeclaration,
         annotatedProperties: Sequence<KSPropertyDeclaration>,
         logger: KSPLogger,
-    ): String {
-        val sb = StringBuilder()
+    ): FunSpec {
+        val funcBuilder = FunSpec.builder("onItemDetected")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("tag", ByteArray::class)
+            .addParameter("value", ByteArray::class)
+
+        val block = CodeBlock.builder()
 
         val converterTable = HashMap<String, String>()
         val converters = annotatedProperties
             .map { prop -> getQualifiedName(prop, BerTlvItem::class, logger) }
             .distinct()
+
         converters.forEach { qualifiedName ->
             val variableName = generateVariableName(qualifiedName)
-            sb.append("            val $variableName = ${qualifiedName}()\n")
-
+            block.addStatement("val %N = %T()", variableName, ClassName.bestGuess(qualifiedName))
             converterTable[qualifiedName] = variableName
         }
 
-        sb.append("\n")
+        if (converters.iterator().hasNext()) {
+            block.add("\n")
+        }
 
-        sb.append("            override fun onItemDetected(tag: ByteArray, value: ByteArray) {\n")
-        sb.append("                if (false) {\n")
-        sb.append("                    // Do nothing\n")
+        block.beginControlFlow("if (false)")
+        block.addStatement("// Do nothing")
 
         annotatedProperties.forEach { prop ->
             val tagArray = getTagArrayAsString(prop, BerTlvItem::class, logger)
             val qualifiedName = getQualifiedName(prop, BerTlvItem::class, logger)
             val converterVariableName = converterTable[qualifiedName]
-            sb.append("                } else if (byteArrayOf(${tagArray}).contentEquals(tag)) {\n")
+
+            block.nextControlFlow("else if (byteArrayOf(%L).contentEquals(tag))", tagArray)
 
             val decClass = prop.type.resolve().declaration
             if (berTlvClasses.contains(decClass)) {
-                val className = decClass.simpleName.asString()
-                sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(value) }\n")
+                val className = (decClass as KSClassDeclaration).toClassName() // Use toClassName for correct import
+                // Need to refer to the receiver of the outer function
+                // "this@readFrom" is correct if the outer function is "readFrom"
+                // The outer function is an extension function on classDeclaration.
+
+                block.addStatement("this@readFrom.%N = %T().also { it.readFrom(value) }", prop.simpleName.asString(), className)
             } else {
-                sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(value)\n")
+                block.addStatement("this@readFrom.%N = %N.convertFromByteArray(value)", prop.simpleName.asString(), converterVariableName)
             }
         }
 
-        sb.append("                } else {\n")
-        sb.append("                    // Do nothing\n")
-        sb.append("                }\n")
-        sb.append("                postCallback?.onItemDetected(tag, value)\n")
-        sb.append("            }\n")
-        return sb.toString()
+        block.nextControlFlow("else")
+        block.addStatement("// Do nothing")
+        block.endControlFlow()
+
+        block.addStatement("postCallback?.onItemDetected(tag, value)")
+
+        return funcBuilder.addCode(block.build()).build()
     }
 }

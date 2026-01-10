@@ -2,6 +2,7 @@ TLV-KSP
 ========
 
 [![CI](https://github.com/keiji/tlv-ksp/actions/workflows/ci.yml/badge.svg)](https://github.com/keiji/tlv-ksp/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/dev.keiji.tlv/tlv-ksp.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/dev.keiji.tlv/tlv-ksp)
 
 TLV-KSP is a Kotlin library for encoding and decoding TLV(Tag-Length-Value) data. This library is
 now supported BER(Basic Encoding Rules) and Compact format.

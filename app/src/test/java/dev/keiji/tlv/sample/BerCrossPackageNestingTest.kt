@@ -14,7 +14,7 @@ import java.util.Random
 
 class BerCrossPackageNestingTest {
 
-    private val r = Random()
+    private val r = Random(0L)
 
     @Test
     fun berFoo_berBar_test() {

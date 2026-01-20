@@ -14,7 +14,7 @@ import java.util.Random
 
 class CompactCrossPackageNestingTest {
 
-    private val r = Random()
+    private val r = Random(0L)
 
     @Test
     fun compactFoo_compactBar_test() {

@@ -78,10 +78,19 @@ class BerTlvDecoderProcessor(
             className
         )
 
+        val nestedBerTlvImports = annotatedProperties
+            .map { it.type.resolve().declaration }
+            .filter { berTlvClasses.contains(it) }
+            .mapNotNull { it.containingFile?.packageName?.asString() }
+            .filter { it != packageName }
+            .distinct()
+            .joinToString("\n") { "import $it.*" }
+
         val imports = """
 import dev.keiji.tlv.BerTlvDecoder
 import java.io.*
 import java.math.BigInteger
+$nestedBerTlvImports 
         """.trimIndent()
 
         val classTemplate0 = """

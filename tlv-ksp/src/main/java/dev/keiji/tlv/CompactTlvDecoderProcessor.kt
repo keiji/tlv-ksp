@@ -79,9 +79,18 @@ class CompactTlvDecoderProcessor(
             className
         )
 
+        val nestedCompactTlvImports = annotatedProperties
+            .map { it.type.resolve().declaration }
+            .filter { compactTlvClasses.contains(it) }
+            .mapNotNull { it.containingFile?.packageName?.asString() }
+            .filter { it != packageName }
+            .distinct()
+            .joinToString("\n") { "import $it.*" }
+
         val imports = """
 import dev.keiji.tlv.CompactTlvDecoder
 import java.io.*
+$nestedCompactTlvImports 
         """.trimIndent()
 
         val classTemplate0 = """

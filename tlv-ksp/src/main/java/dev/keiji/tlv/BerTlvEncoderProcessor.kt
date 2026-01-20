@@ -112,9 +112,18 @@ class BerTlvEncoderProcessor(
                 className
             )
 
+            val nestedBerTlvImports = annotatedProperties
+                .map { it.type.resolve().declaration }
+                .filter { berTlvClasses.contains(it) }
+                .mapNotNull { it.containingFile?.packageName?.asString() }
+                .filter { it != packageName }
+                .distinct()
+                .joinToString("\n") { "import $it.*" }
+
             val imports = """
 import dev.keiji.tlv.BerTlvEncoder
 import java.io.*
+$nestedBerTlvImports
         """.trimIndent()
 
             val classTemplate1 = """

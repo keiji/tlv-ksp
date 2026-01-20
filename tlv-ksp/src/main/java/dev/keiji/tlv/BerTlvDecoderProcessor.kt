@@ -172,7 +172,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
 
             val decClass = prop.type.resolve().declaration
             if (berTlvClasses.contains(decClass)) {
-                val className = decClass.simpleName.asString()
+                val className = decClass.qualifiedName?.asString() ?: decClass.simpleName.asString()
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(value) }\n")
             } else {
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(value)\n")

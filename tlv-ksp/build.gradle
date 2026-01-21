@@ -32,7 +32,7 @@ publishing {
 
             pom {
                 name = 'TLV-KSP'
-                description = 'TLV-KSP is a Kotlin library that compile-time encoder and decoder for TLV data.'
+                description = 'Kotlin Symbol Processing (KSP) based code generator for TLV encoding and decoding.'
                 url = 'https://github.com/keiji/tlv-ksp'
                 licenses {
                     license {
@@ -48,8 +48,8 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'https://github.com/keiji/tlv-ksp.git'
-                    developerConnection = 'https://github.com/keiji/tlv-ksp.git'
+                    connection = 'scm:git:https://github.com/keiji/tlv-ksp.git'
+                    developerConnection = 'scm:git:git@github.com:keiji/tlv-ksp.git'
                     url = 'https://github.com/keiji/tlv-ksp'
                 }
             }

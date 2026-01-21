@@ -5,6 +5,8 @@ import dev.keiji.tlv.BerTlvItem
 import dev.keiji.tlv.BooleanTypeConverter
 import dev.keiji.tlv.ByteTypeConverter
 import dev.keiji.tlv.StringTypeConverter
+import dev.keiji.tlv.sample.sub.SubpackagePrimitiveDatum
+import dev.keiji.tlv.sample.sub.SubpackagePrimitiveOtherNested
 
 @BerTlv
 data class ConstructedData(
@@ -22,6 +24,17 @@ data class ConstructedData(
 
     @BerTlvItem(tag = [0x03], typeConverter = ByteTypeConverter::class)
     var data4: Byte? = null,
+
+    @BerTlvItem(tag = [0x11])
+    var data5: SubpackagePrimitiveDatum? = null,
+
+    @BerTlvItem(tag = [0x12])
+    var data6: ByteArray? = null,
+
+    @BerTlvItem(tag = [0x30])
+    var data7: SubpackagePrimitiveOtherNested.SomeNested? = null,
+
+    var ignored: ByteArray? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

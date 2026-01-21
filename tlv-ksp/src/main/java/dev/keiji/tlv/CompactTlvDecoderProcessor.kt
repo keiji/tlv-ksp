@@ -121,7 +121,7 @@ fun ${targetQualifiedName}.readFrom(
         val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
 
         file.use {
-            it.appendText("package $packageName\n")
+            it.appendText("package $packageName")
                 .appendText("")
                 .appendText(imports)
                 .appendText("")

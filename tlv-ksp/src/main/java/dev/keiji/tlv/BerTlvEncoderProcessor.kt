@@ -137,7 +137,7 @@ fun ${targetQualifiedName}.writeTo(outputStream: OutputStream) {
             val writeTo = generateWriteTo(annotatedProperties)
 
             file.use {
-                it.appendText("package $packageName\n")
+                it.appendText("package $packageName")
                     .appendText(imports)
                     .appendText("")
                     .appendText(classTemplate1)

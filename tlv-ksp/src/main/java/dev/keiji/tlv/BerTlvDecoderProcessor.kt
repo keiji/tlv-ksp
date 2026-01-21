@@ -71,21 +71,31 @@ class BerTlvDecoderProcessor(
         logger: KSPLogger,
     ) {
         val packageName = classDeclaration.containingFile!!.packageName.asString()
-        val className = "${classDeclaration.simpleName.asString()}BerTlvDecoder"
+        val className = "${classDeclaration.resolveNestedSimpleName("")}BerTlvDecoder"
         val file = codeGenerator.createNewFile(
             Dependencies(true, classDeclaration.containingFile!!),
             packageName,
             className
         )
 
-        val imports = """
-import dev.keiji.tlv.BerTlvDecoder
-import java.io.*
-import java.math.BigInteger
-        """.trimIndent()
+
+        val importSet = resolveImportsForProperties(
+            annotatedProperties,
+            packageName,
+            setOf("readFrom")
+        )
+
+        val imports = buildString {
+            appendLine("import dev.keiji.tlv.BerTlvDecoder")
+            appendLine("import java.io.*")
+            appendLine("import java.math.BigInteger")
+            importSet.sorted().forEach { appendLine("import $it") }
+        }
+
+        val targetQualifiedName = classDeclaration.requireQualifiedName().asString()
 
         val classTemplate0 = """
-fun ${classDeclaration.simpleName.asString()}.readFrom(
+fun ${targetQualifiedName}.readFrom(
     byteArray: ByteArray,
     postCallback: BerTlvDecoder.Callback? = null,
 ) {
@@ -94,7 +104,7 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
         """.trimIndent()
 
         val classTemplate1 = """
-fun ${classDeclaration.simpleName.asString()}.readFrom(
+fun ${targetQualifiedName}.readFrom(
     inputStream: InputStream,
     postCallback: BerTlvDecoder.Callback? = null,
 ) {
@@ -170,9 +180,9 @@ fun ${classDeclaration.simpleName.asString()}.readFrom(
             val converterVariableName = converterTable[qualifiedName]
             sb.append("                } else if (byteArrayOf(${tagArray}).contentEquals(tag)) {\n")
 
-            val decClass = prop.type.resolve().declaration
+            val decClass = prop.type.resolve().declaration as KSClassDeclaration
             if (berTlvClasses.contains(decClass)) {
-                val className = decClass.simpleName.asString()
+                val className = decClass.requireQualifiedName().asString()
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(value) }\n")
             } else {
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(value)\n")

@@ -80,16 +80,14 @@ object BerTlvDecoder {
         val data = ByteArray(dataLength)
         var offset = 0
 
-        while (true) {
-            val readLength = inputStream.read(data, offset, (dataLength - offset))
+        while (offset < dataLength) {
+            val readLength = inputStream.read(data, offset, dataLength - offset)
             if (readLength < 0) {
                 throw StreamCorruptedException()
-            } else if (readLength < (dataLength - offset)) {
-                offset += readLength
-            } else {
-                return data
             }
+            offset += readLength
         }
+        return data
     }
 
     fun readTagFieldBytes(inputStream: InputStream): ByteArray? {

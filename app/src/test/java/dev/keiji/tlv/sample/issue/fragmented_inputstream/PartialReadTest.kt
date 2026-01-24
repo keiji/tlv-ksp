@@ -6,7 +6,6 @@ import org.junit.Test
 import java.io.ByteArrayInputStream
 
 class PartialReadTest {
-    @Ignore("Enable this test after fixing the issue.")
     @Test
     fun testBerPartialReadHandling() {
         val expectedValue = ByteArray(10) { it.toByte() }
@@ -27,7 +26,6 @@ class PartialReadTest {
         assertArrayEquals(expectedValue, resultObj.data)
     }
 
-    @Ignore("Enable this test after fixing the issue.")
     @Test
     fun testCompactPartialReadHandling() {
         val expectedValue = ByteArray(10) { it.toByte() }

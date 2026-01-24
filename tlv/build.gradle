@@ -44,13 +44,12 @@ publishing {
         mavenJava(MavenPublication) {
             groupId = "${group}"
             artifactId = 'tlv'
-            version = "${version}"
 
             from components.java
 
             pom {
                 name = 'TLV'
-                description = 'TLV is a Kotlin library for encoding and decoding TLV data.'
+                description = 'A lightweight Kotlin library for Tag-Length-Value (TLV) data handling.'
                 url = 'https://github.com/keiji/tlv-ksp'
                 licenses {
                     license {
@@ -66,20 +65,10 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'https://github.com/keiji/tlv-ksp.git'
-                    developerConnection = 'https://github.com/keiji/tlv-ksp.git'
+                    connection = 'scm:git:https://github.com/keiji/tlv-ksp.git'
+                    developerConnection = 'scm:git:git@github.com:keiji/tlv-ksp.git'
                     url = 'https://github.com/keiji/tlv-ksp'
                 }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            url = rootProject.ext.repoUrl
-            credentials {
-                username = rootProject.ext.sonatypeUsername
-                password = rootProject.ext.sonatypePassword
             }
         }
     }

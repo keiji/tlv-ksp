@@ -8,24 +8,13 @@ plugins {
     id 'org.jetbrains.kotlin.android' version '2.3.0' apply false
     id 'org.jetbrains.kotlin.jvm' version '2.3.0' apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-}
 
-Properties sonaTypeProps = new Properties()
-File sonatypePropertiesFile = project.rootProject.file("sonatype.properties")
-if (sonatypePropertiesFile.exists()) {
-    sonaTypeProps.load(sonatypePropertiesFile.newDataInputStream())
+    id("com.gradleup.nmcp.aggregation") version "1.4.3"
 }
 
 ext {
     groupId = 'dev.keiji.tlv'
     versionCode = '0.3.4'
-
-    sonatypeUsername = sonaTypeProps.get('sonatypeUsername') ?: ""
-    sonatypePassword = sonaTypeProps.get('sonatypePassword') ?: ""
-
-    def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-    def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-    repoUrl = versionCode.endsWith('-SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 }
 
 tasks.register('reportMerge', ReportMergeTask) {
@@ -51,4 +40,17 @@ subprojects {
 
 tasks.register('clean', Delete) {
     delete rootProject.buildDir
+}
+
+nmcpAggregation {
+    centralPortal {
+        username = System.getenv("CENTRAL_PORTAL_USERNAME")
+        password = System.getenv("CENTRAL_PORTAL_PASSWORD")
+        publishingType = "USER_MANAGED"
+    }
+}
+
+dependencies {
+    nmcpAggregation(project(":tlv"))
+    nmcpAggregation(project(":tlv-ksp"))
 }

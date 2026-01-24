@@ -18,9 +18,9 @@ class PartialReadTest {
             chunkSize = 1
         )
 
-        val resultObj = inputStream.use {
-            PrimitiveDatum().also {
-                it.readFrom(inputStream)
+        val resultObj = inputStream.use { stream ->
+            PrimitiveDatum().apply {
+                readFrom(stream)
             }
         }
 

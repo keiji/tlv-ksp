@@ -54,16 +54,6 @@ publishing {
             }
         }
     }
-
-    repositories {
-        maven {
-            url = rootProject.ext.repoUrl
-            credentials {
-                username = rootProject.ext.sonatypeUsername
-                password = rootProject.ext.sonatypePassword
-            }
-        }
-    }
 }
 
 signing {

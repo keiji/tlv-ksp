@@ -37,7 +37,7 @@ jacocoTestReport {
 }
 
 group = rootProject.ext.groupId
-version = rootProject.ext.versionCode
+version = rootProject.ext.versionName
 
 publishing {
     publications {

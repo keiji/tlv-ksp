@@ -64,16 +64,14 @@ class CompactTlvDecoder {
             val data = ByteArray(dataLength)
             var offset = 0
 
-            while (true) {
-                val readLength = inputStream.read(data, offset, (dataLength - offset))
+            while (offset < dataLength) {
+                val readLength = inputStream.read(data, offset, dataLength - offset)
                 if (readLength < 0) {
                     throw StreamCorruptedException()
-                } else if (readLength < (dataLength - offset)) {
-                    offset += readLength
-                } else {
-                    return data
                 }
+                offset += readLength
             }
+            return data
         }
 
         fun readTag(tagAndLength: Int): Byte = ((tagAndLength and MASK_TAG_BITS) ushr 4).toByte()

@@ -44,7 +44,6 @@ publishing {
         mavenJava(MavenPublication) {
             groupId = "${group}"
             artifactId = 'tlv'
-            version = "${version}"
 
             from components.java
 

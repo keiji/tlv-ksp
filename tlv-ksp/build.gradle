@@ -26,7 +26,6 @@ publishing {
         mavenJava(MavenPublication) {
             groupId = "${group}"
             artifactId = 'tlv-ksp'
-            version = "${version}"
 
             from components.java
 

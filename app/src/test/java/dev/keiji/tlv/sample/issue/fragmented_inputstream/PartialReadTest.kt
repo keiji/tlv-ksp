@@ -39,9 +39,9 @@ class PartialReadTest {
             chunkSize = 1
         )
 
-        val resultObj = inputStream.use {
-            CompactDatum().also {
-                it.readFrom(inputStream)
+        val resultObj = inputStream.use { stream ->
+            CompactDatum().apply {
+                readFrom(stream)
             }
         }
 

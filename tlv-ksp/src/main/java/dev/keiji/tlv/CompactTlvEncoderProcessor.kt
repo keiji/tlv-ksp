@@ -109,13 +109,22 @@ class CompactTlvEncoderProcessor(
                 className
             )
 
-            val imports = """
-import dev.keiji.tlv.CompactTlvEncoder
-import java.io.*
-        """.trimIndent()
+            val importSet = resolveImportsForProperties(
+                annotatedProperties,
+                packageName,
+                setOf("writeTo")
+            )
+
+            val imports = buildString {
+                appendLine("import dev.keiji.tlv.CompactTlvEncoder")
+                appendLine("import java.io.*")
+                importSet.sorted().forEach { appendLine("import $it") }
+            }
+
+            val targetQualifiedName = classDeclaration.requireQualifiedName().asString()
 
             val classTemplate1 = """
-fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream) {
+fun ${targetQualifiedName}.writeTo(outputStream: OutputStream) {
         """.trimIndent()
 
             val classTemplate2 = """
@@ -126,7 +135,6 @@ fun ${classDeclaration.simpleName.asString()}.writeTo(outputStream: OutputStream
 
             file.use {
                 it.appendText("package $packageName")
-                    .appendText("")
                     .appendText(imports)
                     .appendText("")
                     .appendText(classTemplate1)

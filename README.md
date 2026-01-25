@@ -180,6 +180,57 @@ OR
     var stringData: String? = null,
 ```
 
+### How to publish
+
+To publish the package to Maven Central, you need to configure your GPG key and Central Portal credentials.
+
+**1. Configure GPG Signing**
+
+This project is configured to use the GPG command-line tool (`useGpgCmd()`), which allows you to specify the signing key by its User ID (e.g., email address). You have two options to configure this, with project-specific settings taking precedence over global ones.
+
+**Option 1: Project-specific setting (Recommended)**
+
+For project-specific configuration, which avoids interfering with other projects, create a `local.properties` file in the project's root directory. This file is automatically ignored by Git in Android projects, so your credentials won't be committed.
+
+Add the following line to `local.properties`:
+
+```properties
+signing.gnupg.keyName=YOUR_KEY_ID_OR_EMAIL
+```
+
+**Option 2: Global setting**
+
+Alternatively, you can configure the key globally for all your projects by editing your user-level `gradle.properties` file, which is usually located at `~/.gradle/gradle.properties`.
+
+Add the following line to that file:
+
+```properties
+signing.gnupg.keyName=YOUR_KEY_ID_OR_EMAIL
+```
+
+---
+
+For both options, replace `YOUR_KEY_ID_OR_EMAIL` with the email address associated with your GPG key, or its hexadecimal ID.
+
+To be prompted for your passphrase in the terminal, ensure that the `GPG_PASSPHRASE` environment variable is **not** set.
+
+**2. Configure Central Portal Credentials**
+
+Set the following environment variables with your Sonatype Central Portal credentials:
+
+*   `CENTRAL_PORTAL_USERNAME`: Your username or token.
+*   `CENTRAL_PORTAL_PASSWORD`: Your password or token.
+
+**3. Publish the Package**
+
+Once the configuration is complete, run the following command:
+
+```bash
+./gradlew publishAggregationToCentralPortal
+```
+
+This command will build the project, sign the artifacts using your specified GPG key, and upload them to the Sonatype Central Portal. You will be prompted to enter your GPG key passphrase in the terminal during the signing process.
+
 License
 ========
 

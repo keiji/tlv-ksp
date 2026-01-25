@@ -3,6 +3,7 @@ plugins {
     id "com.google.devtools.ksp" version "2.3.4"
     id 'maven-publish'
     id 'signing'
+    id "com.gradleup.nmcp"
 }
 
 dependencies {
@@ -24,7 +25,7 @@ version = rootProject.ext.versionName
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = "${group}"
+            groupId = project.group
             artifactId = 'tlv-ksp'
 
             from components.java

@@ -2,8 +2,8 @@ plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
     id 'maven-publish'
-    id 'signing'
     id 'jacoco'
+    id 'signing'
     id "com.gradleup.nmcp"
 }
 
@@ -14,11 +14,13 @@ java {
     withJavadocJar()
     withSourcesJar()
 }
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 }
+
 compileTestKotlin {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
@@ -43,7 +45,7 @@ version = rootProject.ext.versionName
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = "${group}"
+            groupId = project.group
             artifactId = 'tlv'
 
             from components.java

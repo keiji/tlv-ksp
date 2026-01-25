@@ -13,8 +13,8 @@ To add TLV-KSP to your project, include the following in your app module build.g
 
 ```
 dependencies {
-    implementation("dev.keiji.tlv:tlv:0.3.3")
-    ksp("dev.keiji.tlv:tlv-ksp:0.3.3")
+    implementation("dev.keiji.tlv:tlv:0.3.4")
+    ksp("dev.keiji.tlv:tlv-ksp:0.3.4")
 }
 ```
 

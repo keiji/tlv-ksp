@@ -6,6 +6,8 @@ import org.junit.Test
 import java.io.ByteArrayOutputStream
 
 /**
+ * [GitHub Issue #218](https://github.com/keiji/tlv-ksp/issues/218)
+ *
  * `readFrom` and `writeTo` is not declared in `dev.keiji.tlv.sample.issue.gh218.standalone`
  *  package as extension function so it should not be imported, otherwise it causes compile error
  */

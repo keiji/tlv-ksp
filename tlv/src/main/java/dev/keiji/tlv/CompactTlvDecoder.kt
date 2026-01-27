@@ -67,7 +67,7 @@ class CompactTlvDecoder {
             try {
                 DataInputStream(inputStream).readFully(data)
             } catch (e: EOFException) {
-                throw StreamCorruptedException(e.message)
+                throw StreamCorruptedException().initCause(e) as StreamCorruptedException
             }
             return data
         }

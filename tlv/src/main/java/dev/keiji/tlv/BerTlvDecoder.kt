@@ -17,6 +17,7 @@
 package dev.keiji.tlv
 
 import java.io.ByteArrayOutputStream
+import java.io.DataInputStream
 import java.io.InputStream
 import java.io.InvalidObjectException
 import java.io.StreamCorruptedException
@@ -78,15 +79,7 @@ object BerTlvDecoder {
     ): ByteArray {
         val dataLength = length.toInt()
         val data = ByteArray(dataLength)
-        var offset = 0
-
-        while (offset < dataLength) {
-            val readLength = inputStream.read(data, offset, dataLength - offset)
-            if (readLength < 0) {
-                throw StreamCorruptedException()
-            }
-            offset += readLength
-        }
+        DataInputStream(inputStream).readFully(data)
         return data
     }
 

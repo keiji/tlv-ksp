@@ -6,6 +6,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.io.EOFException
 import java.io.InputStream
 import java.io.InvalidObjectException
 import java.io.StreamCorruptedException
@@ -150,7 +151,7 @@ class BerTlvDecoderTest {
         assertArrayEquals(data, value)
     }
 
-    @Test(expected = StreamCorruptedException::class)
+    @Test(expected = EOFException::class)
     fun readValueFieldBytesTest_EOF() {
         val data = byteArrayOf(0x01)
         val inputStream = ByteArrayInputStream(data)

@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.EOFException
 import java.io.InputStream
 import java.io.StreamCorruptedException
 
@@ -103,8 +104,8 @@ class CompactTlvDecoderTest {
         assertEquals(0, receivedItems.size)
     }
 
-    @Test(expected = StreamCorruptedException::class)
-    fun readValue_StreamCorruptedException() {
+    @Test(expected = EOFException::class)
+    fun readValue_EOFException() {
         // Tag 1, Length 5, but stream ends
         val data = byteArrayOf(0x15, 0x01, 0x02)
         val inputStream = ByteArrayInputStream(data)

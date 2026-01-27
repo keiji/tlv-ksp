@@ -255,27 +255,6 @@ internal fun generateVariableName(qualifiedName: String): String = qualifiedName
 internal fun KSDeclaration.requireQualifiedName() =
     requireNotNull(this.qualifiedName) { "local or anonymous declarations are not supported." }
 
-internal fun resolveImportsForProperties(
-    annotatedProperties: Sequence<KSPropertyDeclaration>,
-    currentPackage: String,
-    methods: Set<String> = setOf(),
-): Set<String> {
-    val importSet = mutableSetOf<String>()
-    for (prop in annotatedProperties) {
-        val type = prop.type.resolve().declaration
-        val typeFqn = type.requireQualifiedName().asString()
-        if (typeFqn.startsWith("kotlin.")) continue // Do not import kotlin.* types
-        val typePackage = type.packageName.asString()
-        if (typePackage != currentPackage) {
-            importSet.add(typeFqn)
-            for (method in methods) {
-                importSet.add("$typePackage.$method")
-            }
-        }
-    }
-    return importSet
-}
-
 internal fun KSClassDeclaration.resolveNestedSimpleName(separator: String = "."): String {
     val names = mutableListOf<String>()
     var current: KSClassDeclaration? = this
@@ -285,3 +264,6 @@ internal fun KSClassDeclaration.resolveNestedSimpleName(separator: String = ".")
     }
     return names.reversed().joinToString(separator)
 }
+
+internal fun Set<String>.toImportStatements(): String =
+    this.sorted().joinToString(separator = "\n", transform = { "import $it" })

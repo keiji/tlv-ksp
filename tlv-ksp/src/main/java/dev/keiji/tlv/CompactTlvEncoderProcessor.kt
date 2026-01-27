@@ -109,18 +109,10 @@ class CompactTlvEncoderProcessor(
                 className
             )
 
-            val importSet = resolveImportsForProperties(
-                annotatedProperties,
-                packageName,
-                setOf("writeTo")
+            val importsToGenerate = mutableSetOf(
+                "dev.keiji.tlv.CompactTlvEncoder",
+                "java.io.*",
             )
-
-            val imports = buildString {
-                appendLine("import dev.keiji.tlv.CompactTlvEncoder")
-                appendLine("import java.io.*")
-                importSet.sorted().forEach { appendLine("import $it") }
-            }
-
             val targetQualifiedName = classDeclaration.requireQualifiedName().asString()
 
             val classTemplate1 = """
@@ -131,11 +123,12 @@ fun ${targetQualifiedName}.writeTo(outputStream: OutputStream) {
 }
         """.trimIndent()
 
-            val writeTo = generateWriteTo(annotatedProperties)
+            val (additionalImports, writeTo) = generateWriteTo(annotatedProperties)
+            importsToGenerate.addAll(additionalImports)
 
             file.use {
                 it.appendText("package $packageName")
-                    .appendText(imports)
+                    .appendText(importsToGenerate.toImportStatements())
                     .appendText("")
                     .appendText(classTemplate1)
                     .appendText(writeTo)
@@ -146,8 +139,9 @@ fun ${targetQualifiedName}.writeTo(outputStream: OutputStream) {
         @Suppress("MaxLineLength")
         private fun generateWriteTo(
             annotatedProperties: Sequence<KSPropertyDeclaration>
-        ): String {
+        ): Pair<Set<String>, String> {
             val sb = StringBuilder()
+            val additionalImports = mutableSetOf<String>()
 
             val converterTable = HashMap<String, String>()
             val converters = annotatedProperties
@@ -171,6 +165,7 @@ fun ${targetQualifiedName}.writeTo(outputStream: OutputStream) {
 
                 val decClass = prop.type.resolve().declaration
                 if (compactTlvClasses.contains(decClass)) {
+                    additionalImports.add("${decClass.packageName.asString()}.writeTo")
                     sb.append("    ${propName}.also {\n")
                     sb.append("        val data = ByteArrayOutputStream().let { baos ->\n")
                     sb.append("            ${propName}.writeTo(baos)\n")
@@ -185,7 +180,7 @@ fun ${targetQualifiedName}.writeTo(outputStream: OutputStream) {
                 }
             }
 
-            return sb.toString()
+            return additionalImports to sb.toString()
         }
     }
 

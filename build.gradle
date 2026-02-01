@@ -15,7 +15,7 @@ plugins {
 
 ext {
     groupId = 'dev.keiji.tlv'
-    versionName = '0.4.0'
+    versionName = '0.4.1'
 }
 
 tasks.register('reportMerge', ReportMergeTask) {

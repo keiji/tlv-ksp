@@ -78,19 +78,11 @@ class BerTlvDecoderProcessor(
             className
         )
 
-
-        val importSet = resolveImportsForProperties(
-            annotatedProperties,
-            packageName,
-            setOf("readFrom")
+        val importsToGenerate = mutableSetOf(
+            "dev.keiji.tlv.BerTlvDecoder",
+            "java.io.*",
+            "java.math.BigInteger",
         )
-
-        val imports = buildString {
-            appendLine("import dev.keiji.tlv.BerTlvDecoder")
-            appendLine("import java.io.*")
-            appendLine("import java.math.BigInteger")
-            importSet.sorted().forEach { appendLine("import $it") }
-        }
 
         val targetQualifiedName = classDeclaration.requireQualifiedName().asString()
 
@@ -133,12 +125,12 @@ fun ${targetQualifiedName}.readFrom(
 }
         """.trimIndent()
 
-        val onItemDetected = generateOnItemDetected(annotatedProperties, logger)
-
+        val (additionalImports, onItemDetected) = generateOnItemDetected(annotatedProperties, logger)
+        importsToGenerate.addAll(additionalImports)
         file.use {
             it.appendText("package $packageName")
                 .appendText("")
-                .appendText(imports)
+                .appendText(importsToGenerate.toImportStatements())
                 .appendText("")
                 .appendText(classTemplate0)
                 .appendText("")
@@ -154,8 +146,9 @@ fun ${targetQualifiedName}.readFrom(
     private fun generateOnItemDetected(
         annotatedProperties: Sequence<KSPropertyDeclaration>,
         logger: KSPLogger,
-    ): String {
+    ): Pair<Set<String>, String> {
         val sb = StringBuilder()
+        val additionalImports = mutableSetOf<String>()
 
         val converterTable = HashMap<String, String>()
         val converters = annotatedProperties
@@ -183,6 +176,7 @@ fun ${targetQualifiedName}.readFrom(
             val decClass = prop.type.resolve().declaration as KSClassDeclaration
             if (berTlvClasses.contains(decClass)) {
                 val className = decClass.requireQualifiedName().asString()
+                additionalImports.add("${decClass.packageName.asString()}.readFrom")
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${className}().also { it.readFrom(value) }\n")
             } else {
                 sb.append("                    this@readFrom.${prop.simpleName.asString()} = ${converterVariableName}.convertFromByteArray(value)\n")
@@ -194,6 +188,6 @@ fun ${targetQualifiedName}.readFrom(
         sb.append("                }\n")
         sb.append("                postCallback?.onItemDetected(tag, value)\n")
         sb.append("            }\n")
-        return sb.toString()
+        return additionalImports to sb.toString()
     }
 }

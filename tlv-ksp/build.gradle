@@ -9,7 +9,7 @@ plugins {
 dependencies {
     implementation project(path: ':tlv')
 
-    implementation "com.google.devtools.ksp:symbol-processing-api:2.3.5"
+    implementation "com.google.devtools.ksp:symbol-processing-api:2.3.6"
 
     testImplementation 'junit:junit:4.13.2'
 }

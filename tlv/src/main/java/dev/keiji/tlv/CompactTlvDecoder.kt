@@ -16,6 +16,8 @@
 
 package dev.keiji.tlv
 
+import java.io.DataInputStream
+import java.io.EOFException
 import java.io.InputStream
 import java.io.StreamCorruptedException
 
@@ -62,14 +64,10 @@ class CompactTlvDecoder {
             dataLength: Int,
         ): ByteArray {
             val data = ByteArray(dataLength)
-            var offset = 0
-
-            while (offset < dataLength) {
-                val readLength = inputStream.read(data, offset, dataLength - offset)
-                if (readLength < 0) {
-                    throw StreamCorruptedException()
-                }
-                offset += readLength
+            try {
+                DataInputStream(inputStream).readFully(data)
+            } catch (e: EOFException) {
+                throw StreamCorruptedException().initCause(e) as StreamCorruptedException
             }
             return data
         }
